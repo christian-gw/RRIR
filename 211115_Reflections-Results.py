@@ -15,7 +15,7 @@
 # 1. Import, Base Settings (System) and Base Settings (User)
 from reflection_definitions import *
 
-%matplotlib notebook
+#%matplotlib notebook
 plt.rcParams['axes.grid'] = True    # Set grid in plots on per default
 VERBOSE = False
 F_up = 500e3
@@ -140,6 +140,8 @@ for position in NR.keys():
 
         fig.suptitle(NR[position][0])
         fig.tight_layout()
+        plt.show()
+
     else:
         tf = NR[position][4]
         fig, ax = plt.subplots(1, figsize=(10, 6))
@@ -158,6 +160,8 @@ for position in NR.keys():
 
         fig.suptitle(NR[position][0])
         fig.tight_layout()
+        plt.show()
+
 # %% codecell
 for position in NR.keys():
     print(position + ': ')

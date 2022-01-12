@@ -254,6 +254,7 @@ class Signal:
         ax.plot(self.axis_arrays['t'], self.y, linewidth=.25)
         ax.set_xlabel('Time [s]')
         fig.suptitle(headline)
+        plt.show()
         return fig, ax
 
     def plot_y_f(self, headline = ''):
@@ -265,6 +266,7 @@ class Signal:
         ax.set_xlim(50, 22e3)
         ax.set_xscale('log')
         fig.suptitle(headline)
+        plt.show()
         return fig, ax
 
     def plot_spec(self, n_win=2048):
@@ -295,6 +297,7 @@ class Signal:
         ax.set_yscale('log')
 
         fig.tight_layout()
+        plt.show()
         return fig, ax
 
     def level_time(self, T=.035):
@@ -840,15 +843,18 @@ if __name__ == "__main__":
 
     sig_345_imp = (sig_345.impulse_response(u))
 
-    # if True:
-    #     print('Generation of exitation:')
-    #     %timeit Signal(par_sweep = par_sweep, dt = 1/F_up)
+    if True:
+        print('Generation of exitation:')
+        # %timeit for each
+        Signal(par_sweep = par_sweep, dt = 1/F_up)
 
-    #     print('Load of wav file:')
-    #     %timeit Signal(path = TARGET_DIR, name = sig_3_name)
+        print('Load of wav file:')
+        Signal(path = TARGET_DIR, name = sig_3_name)
 
-    #     print('Resample:')
-    #     %timeit sig_345.resample(F_up)
+        print('Resample:')
+        sig_345.resample(F_up)
 
-    #     print('Create Impulse:')
-    #     %timeit sig_345.impulse_response(u)
+        print('Create Impulse:')
+        sig_345.impulse_response(u)
+
+        sig_345.plot_y_t()
