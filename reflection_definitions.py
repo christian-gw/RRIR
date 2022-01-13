@@ -502,6 +502,7 @@ class Measurement:
         self.d_probe = d_probe
         self.mp_lst = []
         self.n_mp = 0
+        self.average = []
 
     def create_mp(self, number, _signal, pos):
         """Create measurement point object with specific number and _signal
@@ -552,6 +553,27 @@ class Measurement:
 
         return fig, ax
 
+    def average_mp(self):
+        """
+        Averages all mps
+        If required make sure to apply Corrections on a mp level
+        Parameters
+        ----------
+        Requires full mp_lst
+
+        Returns
+        -------
+        Averaged tf
+        """
+        l = len(self.mp_lst)
+        sum = np.zeros(len(self.mp_lst[0].tf.hf))
+        print(self.mp_lst)
+        # for el in self.mp_lst:
+        #     print(el)
+        #     sum += el.tf.hf
+        average = sum / l
+        self.average = TransferFunction(xf = self.mp_lst[0].axis_arrays['xf'],
+                                        hf = average)
 
 class MeasurementPoint:
     """Class for one measuremnet point it should be included in the 'measurement'-class.
