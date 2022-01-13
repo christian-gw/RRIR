@@ -34,16 +34,16 @@ NR = {'Wand_0_0': ['Wall - LR = 0 m, H = 0 m, NeutrH = 1.6 m'],
       'Wand_-_0': ['Wall - LR = -.4 m, H = 0 m, NeutrH = 1.6 m'],
       'Wand_0_+': ['Wall - LR = 0 m, H = +.4 m, NeutrH = 1.6 m'],
       'Wand_0_-': ['Wall - LR = 0 m, H = -.4 m, NeutrH = 1.6 m'],
-      'Boden_1.5': ['Floor - A = 1.5 m, H = .93 m'],
-      'Boden_.2': ['Floor - A = .2 m, H = .93 m'],
+      #'Boden_1.5': ['Floor - A = 1.5 m, H = .93 m'],
+      #'Boden_.2': ['Floor - A = .2 m, H = .93 m'],
       'Direct_.8': ['Direct - A  =  .8 m, H = 2 m']}
 POS = {'Wand_0_0': [ 0,   0],
       'Wand_+_0': [ .4,   0],
       'Wand_-_0': [-.4,   0],
       'Wand_0_+': [  0,  .4],
       'Wand_0_-': [  0, -.4],
-      'Boden_1.5': [ 0,   0],
-      'Boden_.2': [  0,   0],
+      #'Boden_1.5': [ 0,   0],
+      #'Boden_.2': [  0,   0],
       'Direct_.8': [ 0,   0]}
 
 ################################################################
@@ -97,7 +97,7 @@ for position in NR.keys():
         incoming_sig=direct[1], reflected_sig=NR[position][2])
     tf_oct = tf.get_octave_band(fact=1/3)
     NR[position].append(tf)
-    NR[position].append(tf_oct)
+    #NR[position].append(tf_oct)
 
 # %% markdown
 # 5. Create Measurement object and add it to MP objects
@@ -108,103 +108,13 @@ for i, position in zip(range(len(NR)), NR.keys()):
     mea_Marth.create_mp(i,
                         NR[position][3].get_octave_band(fact = 1/3),
                         POS[position])
-    # NR[position][-1].plot_hf()
+    mea_Marth.mp_lst[i].apply_c()
 
-mea_Marth.mp_lst
-su = np.zeros(31,  np.float64)
-
-for el in mea_Marth.mp_lst:
-    su += el.tf.hf
-su /= 3
-
+    fig, ax = NR[position][-1].plot_hf()
+    ax.set_title(NR[position][0])
+    ax.set_ylim(1e-1, 1e0)
 mea_Marth.average_mp()
+_, ax = mea_Marth.average.plot_hf()
+ax.set_ylim(1e-1, 1e0)
 
-# %% codecell
-def plot_t_f(ax, sig):
-    ax[0].plot(sig.axis_arrays['t'],
-               sig.y,
-               linewidth=.25)
-
-    ax[1].plot(sig.axis_arrays['xf'],
-               np.absolute(sig.y_f[:int(sig.n_tot/2)]),
-               linewidth=.25)
-    ax[0].set_xlim(0, .012)
-    ax[0].set_xlabel('t [s]')
-    ax[0].set_ylabel('p')
-
-    ax[1].set_xlim(50, 5e3)
-    ax[1].set_xlabel('f [Hz]')
-    ax[1].set_yscale('log')
-    ax[1].set_ylim(5e2, 5e6)
-
-
-for position in NR.keys():
-    if True:
-        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 2, figsize=(10, 9))
-        plot_t_f(ax1, NR[position][1])
-        ax1[0].set_title('Raw Reflected Signal')
-        ax1[1].set_title('Raw Reflected Signal - Frequency')
-
-        plot_t_f(ax2, direct[1])
-        ax2[0].set_title('Direct Reflected Signal')
-        ax2[1].set_title('Direct Reflected Signal - Frequency')
-
-        plot_t_f(ax3, NR[position][2])
-        ax3[0].set_title('Corrected Reflected Signal')
-        ax3[1].set_title('Corrected Reflected Signal - Frequency')
-
-        # Plot Transfer Fkt
-        tf = NR[position][3]
-        ax4[0].plot(tf.xf,
-                    np.absolute(tf.hf[:int(tf.n_tot/2)]),
-                    linewidth=.25)
-
-        tf = NR[position][4]
-        ax4[1].bar(tf.xf,
-                   np.absolute(tf.hf),
-                   .1*tf.xf)
-        for ax in ax4:
-            ax.set_xlim(50, 5e3)
-            ax.set_xlabel('f [Hz]')
-            ax.set_xscale('log')
-            ax.set_yscale('log')
-            ax.set_ylim(.05, 5)
-
-        ax4[0].set_title('Transfkt (not Amlitude correct) - Spectrum')
-        ax4[1].set_title('Transfkt (not Amlitude correct) - Terz')
-
-        fig.suptitle(NR[position][0])
-        fig.tight_layout()
-        plt.show()
-
-    else:
-        tf = NR[position][4]
-        fig, ax = plt.subplots(1, figsize=(10, 6))
-
-        ax.bar(tf.xf,
-               np.absolute(tf.hf),
-               .1*tf.xf)
-
-        ax.set_xlim(50, 5e3)
-        ax.set_xlabel('f [Hz]')
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        #ax.set_ylim(.05, 1)
-
-        ax.set_title('Transfkt (Magnitude roughly corrected) - Terz')
-
-        fig.suptitle(NR[position][0])
-        fig.tight_layout()
-        plt.show()
-
-# %% codecell
-for position in NR.keys():
-    print(position + ': ')
-    freq = NR[position][4].xf
-    pin = NR[position][4].hf
-    print('\tF [Hz]\tFaktor []')
-    for i, fi in enumerate(freq):
-        print('\t' + str(fi) + '\t' + str(pin[i]))
-# %% codecell
-NR
 # %% codecell

@@ -567,12 +567,11 @@ class Measurement:
         """
         l = len(self.mp_lst)
         sum = np.zeros(len(self.mp_lst[0].tf.hf))
-        print(self.mp_lst)
-        # for el in self.mp_lst:
-        #     print(el)
-        #     sum += el.tf.hf
+
+        for el in self.mp_lst:
+            sum += el.tf.hf
         average = sum / l
-        self.average = TransferFunction(xf = self.mp_lst[0].axis_arrays['xf'],
+        self.average = TransferFunction(xf = self.mp_lst[0].tf.xf,
                                         hf = average)
 
 class MeasurementPoint:
