@@ -394,7 +394,7 @@ class TransferFunction:
             self.n_tot = incoming_sig.n_tot
             self.xf = incoming_sig.axis_arrays['xf']
 
-            self.hf = np.copy(reflected_sig.y_f / incoming_sig.y_f)
+            self.hf = np.copy(reflected_sig.y_f**2 / incoming_sig.y_f**2)
             self.frange = incoming_sig.frange
 
         elif 'xf' in kwargs and 'hf' in kwargs:
@@ -419,7 +419,7 @@ class TransferFunction:
             incoming_sig, _ = appl_win(sig, in_win[0], in_win[1], form='norm')
             reflected_sig, _ = appl_win(sig, re_win[0], re_win[1], form='norm')
 
-            self.hf = np.copy(reflected_sig.y_f / incoming_sig.y_f)
+            self.hf = np.copy(reflected_sig.y_f**2 / incoming_sig.y_f**2)
             self.frange = incoming_sig.frange
 
         else:

@@ -81,8 +81,16 @@ for position in NR.keys():
     cor = np.copy(direct[1].resample(F_up).y)  # External Direct
     fak = max(sig)/max(cor)
     #                         Complete - External Direct
-    NR[position].append(Signal(y=sig - fak*cor, dt=1 /
-                        F_up).resample(1/direct[1].dt))
+    NR[position].append(Signal(y=sig - fak*cor,
+                               dt=1 / F_up).resample(1/direct[1].dt))
+    # Transfer function with scaled direct as in and scaled corrected as refl
+    tf = TransferFunction(
+        incoming_sig=Signal(y=fak*cor,
+                            dt = 1/F_up).resample(1/direct[1].dt),
+        reflected_sig=NR[position][2])
+
+    #tf_oct = tf.get_octave_band(fact=1/3)
+    NR[position].append(tf)
 # %% markdown
 # 4. Calculate transferfunction
 # - Uses direct .8 as incomming_sig
@@ -93,10 +101,7 @@ for position in NR.keys():
     del NR[position][3:]  # Reset List after input signal field
 
     # Calculate Transfer fkt
-    tf = TransferFunction(
-        incoming_sig=direct[1], reflected_sig=NR[position][2])
-    tf_oct = tf.get_octave_band(fact=1/3)
-    NR[position].append(tf)
+
     #NR[position].append(tf_oct)
 
 # %% markdown
@@ -110,11 +115,12 @@ for i, position in zip(range(len(NR)), NR.keys()):
                         POS[position])
     mea_Marth.mp_lst[i].apply_c()
 
-    fig, ax = NR[position][-1].plot_hf()
+    fig, ax = mea_Marth.mp_lst[i].tf.plot_hf()
     ax.set_title(NR[position][0])
     ax.set_ylim(1e-1, 1e0)
 mea_Marth.average_mp()
 _, ax = mea_Marth.average.plot_hf()
+ax.set_title('Averaged TF')
 ax.set_ylim(1e-1, 1e0)
 
 # %% codecell
