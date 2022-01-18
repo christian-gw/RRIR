@@ -639,7 +639,7 @@ class MeasurementPoint:
 
         return travel_to_r, travel_from_r, alpha, self.pos['beta'], r_xyz
 
-    def calc_c_geo(self):
+    def calc_c_geo(self, norm = True):
         """Calculates c_geo, uses __geo_norm()"""
 
         # Get geometry
@@ -650,22 +650,27 @@ class MeasurementPoint:
               + str(round(r_xyz,3))
               + ';\t d_rk\t ' + str(round(travel_to_r + travel_from_r,3))
               + ';\t c_geo\t ' + str(round(((travel_to_r + travel_from_r) / r_xyz)**2,3)))
-
-        self.corrections['c_geo'] = ((travel_to_r + travel_from_r) / r_xyz)**2
+        if norm:
+            self.corrections['c_geo'] = ((travel_to_r + travel_from_r) / r_xyz)**2
+        else:
+            return travel_to_r + travel_from_r
 
     def apply_c(self):
         """Applys all correction values to the transfer fkt"""
+        # Are there already corrections set
         mul = 1
         for el in self.corrections:
             mul *= el
 
+        # If no corrections set, do it
         if abs(mul-1) < .02: # If corrections in .98-1.02
             self.calc_c_geo()
             self.calc_c_dir()
 
+        # If no corrections applied, do it
         if not self.corrections['applied']:
             self.tf.hf = np.copy(self.tf.hf) \
-                                 * self.corrections['c_geo']  \
+                                 * self.corrections['c_geo'] \
                                  * self.corrections['c_dir'] \
                                  * self.corrections['c_gain']
             self.corrections['applied'] = True
