@@ -254,7 +254,7 @@ class Signal:
         ax.plot(self.axis_arrays['t'], self.y, linewidth=.25)
         ax.set_xlabel('Time [s]')
         fig.suptitle(headline)
-        plt.show()
+        #plt.show()  # If not in, no show when exec, if in, no work on axis return
         return fig, ax
 
     def plot_y_f(self, headline = ''):
@@ -363,7 +363,6 @@ class Signal:
         direct_sync = Signal(y = fak * np.roll(self.y, -int(len(corell)/2)-pos), dt = direct.dt)
         direct_sync.plot_y_t()
         return direct_sync, Signal(y = self.y - direct_sync.y, dt = direct_sync.dt)
-
 
 class TransferFunction:
     """Transfer Fkt Class
@@ -477,7 +476,6 @@ class TransferFunction:
             x.append(f[2])
             y.append(abs(self.__get_band(*f[0:2])))
         return TransferFunction(xf = np.array(x), hf = np.array(y))
-
 
 class Measurement:
     """Class for handling a whole measurement with multiple Measurement points
@@ -609,7 +607,8 @@ class MeasurementPoint:
                     'y': pos[1],
                     'beta': 2*np.pi,
                     'no': number}
-    def __geo(self):
+
+    def __geo_norm(self):
         """Performs several geometrical calculations concerning the measurement position.
            works with:
                self.x, self.y, self.d_mic, self.d_probe
@@ -627,12 +626,12 @@ class MeasurementPoint:
         d_mic = self.distances['mic']     # source - mic
         d_probe = self.distances['probe'] # mic - probe
 
-        r_xy = np.sqrt(x**2 + y**2)          # Distance in mic plane
+        r_xy = np.sqrt(     x**2 + y**2)     # Distance in mic plane
         r_xyz = np.sqrt(d_mic**2 + r_xy**2)  # Direct distance source -mic
 
         # Traveled distance to and from reflection point
-        r_to_ref_xy = r_xy*(d_mic + d_probe)/(2*d_probe + d_mic)
-        travel_to_r = np.sqrt((d_mic + d_probe)**2 + r_to_ref_xy**2)
+        r_to_ref_xy   = r_xy*(d_mic + d_probe)/(2*d_probe + d_mic)
+        travel_to_r   = np.sqrt((d_mic + d_probe)**2 + r_to_ref_xy**2)
         travel_from_r = np.sqrt(d_probe**2 + (r_xy - r_to_ref_xy)**2)
 
         alpha = np.arctan(r_xy/d_mic)
@@ -640,23 +639,29 @@ class MeasurementPoint:
 
         return travel_to_r, travel_from_r, alpha, self.pos['beta'], r_xyz
 
-
     def calc_c_geo(self):
-        """Calculates c_geo, uses __geo()"""
+        """Calculates c_geo, uses __geo_norm()"""
 
         # Get geometry
-        travel_to_r, travel_from_r, _, _, r_xyz = self.__geo()
+        travel_to_r, travel_from_r, _, _, r_xyz = self.__geo_norm()
+
         # Set c_geo
         print('d_ik\t '
               + str(round(r_xyz,3))
               + ';\t d_rk\t ' + str(round(travel_to_r + travel_from_r,3))
               + ';\t c_geo\t ' + str(round(((travel_to_r + travel_from_r) / r_xyz)**2,3)))
+
         self.corrections['c_geo'] = ((travel_to_r + travel_from_r) / r_xyz)**2
 
     def apply_c(self):
         """Applys all correction values to the transfer fkt"""
-        self.calc_c_geo()
-        self.calc_c_dir()
+        mul = 1
+        for el in self.corrections:
+            mul *= el
+
+        if abs(mul-1) < .02: # If corrections in .98-1.02
+            self.calc_c_geo()
+            self.calc_c_dir()
 
         if not self.corrections['applied']:
             self.tf.hf = np.copy(self.tf.hf) \
