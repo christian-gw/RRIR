@@ -10,7 +10,7 @@
 # - Window 'Direct_.8' and substract it from the rest
 #
 # ## Files
-# From: TARGET_DIR/IMP_{Measurement Position}.wav
+# From: TARGET_DIR/avg/IMP_{Measurement Position}.wav
 #
 # 1. Import, Base Settings (System) and Base Settings (User)
 #
@@ -44,7 +44,7 @@ F_up = 500e3
 ########## Please specify where the Files are ##############
 ############################################################
 
-TARGET_DIR = 'C:/Users/gmeinwieserch/Desktop/04  St-Martha Kirche/211007_Martha/Wall_Refl/'
+AVG_DIR = 'C:/Users/gmeinwieserch/Documents/Python/Reflection/Work_Dir/avg/'
 NAME = 'IMP_%s.wav'
 
 NR = {'Wand_0_0': ['Wall - LR = 0 m, H = 0 m, NeutrH = 1.6 m'],
@@ -78,7 +78,7 @@ for position in NR.keys():
     # Loop will load wav signals to a list wich is the value of the NR dict
     # = Complete Reflection
     del NR[position][1:]  # Reset List after title field
-    NR[position].append(Signal(path=TARGET_DIR, name=NAME %
+    NR[position].append(Signal(path=AVG_DIR, name=NAME %
                         (position)))  # Append signal obj
 
 direct = NR.pop('Direct_.8')

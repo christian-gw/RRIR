@@ -13,6 +13,7 @@ from scipy.signal.windows import tukey, blackmanharris #, hann
 import scipy.signal as sg
 from scipy.io import wavfile
 import numpy as np
+import os
 
 
 # Signal class
@@ -62,7 +63,7 @@ class Signal:
             name = kwargs.get('name', None)
 
             self.dt, self.T, self.n_tot, t, xf, self.y = self.__load_data(
-                path + name)
+                os.path.join(path, name))
             self.axis_arrays['t'] = t
             self.axis_arrays['xf'] = xf
 
