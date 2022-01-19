@@ -11,6 +11,25 @@
 #
 # ## Files
 # From: TARGET_DIR/IMP_{Measurement Position}.wav
+#
+# 1. Import, Base Settings (System) and Base Settings (User)
+#
+# 2. Load Data
+# - Load all elements from the NR dict from Array pos 0 into a Signal object.
+# - Save the direct sound to a direct signal object.
+#
+# 3. Correct Signal
+# - sig = singal
+# - cor = correction signal from .8 direct sound
+# - Create corrected signals
+#
+# 4. Calculate transferfunction
+# - Uses direct .8 as incomming_sig
+# - uses corrected reflected signal as reflected
+#
+# 5. Create Measurement object and add it to MP objects
+#
+
 # %% codecell
 # 1. Import, Base Settings (System) and Base Settings (User)
 from reflection_definitions import *
@@ -19,7 +38,6 @@ from reflection_definitions import *
 plt.rcParams['axes.grid'] = True    # Set grid in plots on per default
 VERBOSE = False
 F_up = 500e3
-
 
 ############################################################
 ########## User Interaction Starts Here       ##############
@@ -51,12 +69,11 @@ POS = {'Wand_0_0': [ 0,   0],
 ################################################################
 par_sweep = [63, 10, 5e3]   # parameter of sweep [fstart, T, fend]
 
-# %% markdown
+# %% codecell
 # 2. Load Data
 # - Load all elements from the NR dict from Array pos 0 into a Signal object.
 # - Save the direct sound to a direct signal object.
 
-# %% codecell
 for position in NR.keys():
     # Loop will load wav signals to a list wich is the value of the NR dict
     # = Complete Reflection
@@ -66,13 +83,12 @@ for position in NR.keys():
 
 direct = NR.pop('Direct_.8')
 
-# %% markdown
+# %% codecell
 # 3. Correct Signal
 # - sig = singal
 # - cor = correction signal from .8 direct sound
 # - Create corrected signals
 
-# %% codecell
 for position in NR.keys():
     del NR[position][2:]  # Reset List after input signal field
 
@@ -91,28 +107,30 @@ for position in NR.keys():
 
     #tf_oct = tf.get_octave_band(fact=1/3)
     NR[position].append(tf)
-# %% markdown
+
+# %% codecell
 # 4. Calculate transferfunction
 # - Uses direct .8 as incomming_sig
 # - uses corrected reflected signal as reflected
-
-# %% markdown
+#
 # 5. Create Measurement object and add it to MP objects
-
-# %% codecell
 mea_Marth = Measurement('Measurement_Martha_Kirche', 1., .25)
+reference_dist = .8
 for i, position in zip(range(len(NR)), NR.keys()):
     mea_Marth.create_mp(i,
-                        NR[position][3].get_octave_band(fact = 1/3),
+                        NR[position][3].get_octave_band(fact = 1),
                         POS[position])
-    #mea_Marth.mp_lst[i].apply_c()
+
+    reflection_dist = mea_Marth.mp_lst[i].calc_c_geo(norm=False)
+    print(reflection_dist)
+    mea_Marth.mp_lst[i].corrections['c_geo'] = (reference_dist/reflection_dist)**2
+    # print(mea_Marth.mp_lst[i].corrections['c_geo'])
+    mea_Marth.mp_lst[i].apply_c()
 
     fig, ax = mea_Marth.mp_lst[i].tf.plot_hf()
     ax.set_title(NR[position][0])
-    #ax.set_ylim(1e-1, 1e0)
+    ax.set_ylim(5e-2, 2e0)
 mea_Marth.average_mp()
 _, ax = mea_Marth.average.plot_hf()
 ax.set_title('Averaged TF')
-#ax.set_ylim(1e-1, 1e0)
-
-# %% codecell
+ax.set_ylim(5e-2, 2e0)

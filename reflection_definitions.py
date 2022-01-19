@@ -646,10 +646,6 @@ class MeasurementPoint:
         travel_to_r, travel_from_r, _, _, r_xyz = self.__geo_norm()
 
         # Set c_geo
-        print('d_ik\t '
-              + str(round(r_xyz,3))
-              + ';\t d_rk\t ' + str(round(travel_to_r + travel_from_r,3))
-              + ';\t c_geo\t ' + str(round(((travel_to_r + travel_from_r) / r_xyz)**2,3)))
         if norm:
             self.corrections['c_geo'] = ((travel_to_r + travel_from_r) / r_xyz)**2
         else:
@@ -658,9 +654,7 @@ class MeasurementPoint:
     def apply_c(self):
         """Applys all correction values to the transfer fkt"""
         # Are there already corrections set
-        mul = 1
-        for el in self.corrections:
-            mul *= el
+        mul = self.corrections['c_geo']*self.corrections['c_dir']*self.corrections['c_gain']
 
         # If no corrections set, do it
         if abs(mul-1) < .02: # If corrections in .98-1.02
@@ -674,6 +668,9 @@ class MeasurementPoint:
                                  * self.corrections['c_dir'] \
                                  * self.corrections['c_gain']
             self.corrections['applied'] = True
+            print('c_geo\t '  + str(round(self.corrections['c_geo'],  3)) \
+            + ';\t c_dir\t '  + str(round(self.corrections['c_dir'],  3)) \
+            + ';\t c_gain\t ' + str(round(self.corrections['c_gain'], 3)))
 
     def calc_c_dir(self):#, signal_direct, signal_ref):
         """Currently not implemented - placeholder """
