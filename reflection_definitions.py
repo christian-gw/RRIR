@@ -8,8 +8,8 @@ Helper functions for evaluation of RIRs from Wave files
 
 from datetime import datetime
 import matplotlib.pyplot as plt
-from scipy.fft import fft, ifft, fftfreq #, fftshift
-from scipy.signal.windows import tukey, blackmanharris #, hann
+from scipy.fft import fft, ifft, fftfreq  # , fftshift
+from scipy.signal.windows import tukey, blackmanharris  # , hann
 import scipy.signal as sg
 from scipy.io import wavfile
 import numpy as np
@@ -45,7 +45,7 @@ class Signal:
 
     def __init__(self, **kwargs):
         self.y = None
-        self.L_t =[]
+        self.L_t = []
         self.y_f = None
 
         self.frange = [60., 96.0e3/2]
@@ -94,7 +94,6 @@ class Signal:
 
             self.y = avg_lst_imp/len(lst)
 
-
         # Generate signal object from one y
         elif 'y' in kwargs and 'dt' in kwargs:
             self.y = kwargs.get('y', None)
@@ -127,7 +126,7 @@ class Signal:
         n_tot = len(y)
         T = dt*n_tot
 
-        #print(dt, n_tot, T)
+        # print(dt, n_tot, T)
         # Create time and frequency axis
         t = np.linspace(0, T, n_tot)
         xf = fftfreq(n_tot, dt)[:n_tot//2]
@@ -167,12 +166,12 @@ class Signal:
         # Creation Frequency modulation (exp rising magnitude)
         # For modulation, K and L see paper from Docstring
         L = T/np.log(om1/om2)
-#                       K              /  L
-        KpL = (om1*T/np.log(om1/om2))  /  L
+#                       K             / L
+        KpL = (om1*T/np.log(om1/om2)) / L
 
         time = np.linspace(0, T, len(x.y))
 
-        #modulation = [(1/(KpL * np.exp(t/L))) for t in time]
+        # modulation = [(1/(KpL * np.exp(t/L))) for t in time]
 
         modulator = lambda t: 1/(KpL * np.exp(t/L))
         modulation = modulator(time)
@@ -192,19 +191,18 @@ class Signal:
         if self.y is not None:
             self.y_f = fft(self.y)
 
-
     # Create new Signal
     def impulse_response(self, exitation):
+
         """Create new signal from measured signal containing impulse response
         created by deconvolution of 'exitation' signal"""
         i_u = self.__inv_u(exitation)
         imp = sg.convolve(self.y, i_u,    # convolution of signal with inverse
-                          mode = 'same')
+                          mode='same')
         # same means conv calculates a full (zero padding) and cuts out middle
-        return Signal(y = imp, dt = self.dt)
+        return Signal(y=imp, dt=self.dt)
 
-
-    def filter_y(self, frange = (65.0, 22000.0)):
+    def filter_y(self, frange=(65.0, 22000.0)):
         """Filter Signal of range 'frange' of type list."""
         sos = sg.butter(10, frange, btype='bp',
                         analog=False, output='sos', fs=1/self.dt)
@@ -212,7 +210,6 @@ class Signal:
         filt = sg.sosfilt(sos, self.y)
         #self.y = filt
         return Signal(y=filt, dt=self.dt)
-
 
     def resample(self, Fs_new):
         """Resample the singal to the new sampling rate"""
@@ -223,7 +220,7 @@ class Signal:
 
         return Signal(y=y, dt=1/Fs_new)
 
-    def cut_signal(self, t_start, t_end, force_n = None):
+    def cut_signal(self, t_start, t_end, force_n=None):
         """
         Cuts Signal to a new signal between times
 
@@ -246,19 +243,19 @@ class Signal:
 
         snap = self.y[n_start: n_start + n_dur]
 
-        return Signal(y = snap, dt = self.dt)
+        return Signal(y=snap, dt=self.dt)
 
     # Plotting
-    def plot_y_t(self, headline = ''):
+    def plot_y_t(self, headline=''):
         """Plot time signal."""
         fig, ax = plt.subplots(1, figsize=(10, 6))
-        ax.plot(self.axis_arrays['t'], self.y, linewidth=.25)
+        ax.plot(self.axis_arrays['t'], self.y, linewidth=1)
         ax.set_xlabel('Time [s]')
         fig.suptitle(headline)
-        #plt.show()  # If not in, no show when exec, if in, no work on axis return
+        # plt.show()  # If not in, no show when exec, if in, no work on axis return
         return fig, ax
 
-    def plot_y_f(self, headline = ''):
+    def plot_y_f(self, headline=''):
         """Plot the magnitude spectrum of the signal."""
         fig, ax = plt.subplots(1, figsize=(10, 6))
         ax.plot(self.axis_arrays['xf'], 2.0/self.n_tot *
@@ -335,7 +332,7 @@ class Signal:
         y = Signal(y=np.copy(np.trim_zeros(self.y)), dt=self.dt)
         y.resample(F_samp)
         np.trim_zeros(y.y)
-        wavfile.write(name, int(F_samp),np.float32(y.y))
+        wavfile.write(name, int(F_samp), np.float32(y.y))
 
     def correct_refl_component(self, direct, t_start, t_dur):
         """
@@ -354,16 +351,17 @@ class Signal:
         int
             Signal to corrected Signal
         """
-        direct,_ = appl_win(direct, t_start, t_dur)
+        direct, _ = appl_win(direct, t_start, t_dur)
         corell = sg.correlate(direct.y, self.y)
 
-        corell = np.roll(corell,int(len(corell)/2))
+        corell = np.roll(corell, int(len(corell)/2))
         pos = np.argmax(corell)
         fak = max(self.y)/max(direct.y)
 
-        direct_sync = Signal(y = fak * np.roll(self.y, -int(len(corell)/2)-pos), dt = direct.dt)
+        direct_sync = Signal(y=fak * np.roll(self.y, -int(len(corell)/2)-pos), dt=direct.dt)
         direct_sync.plot_y_t()
-        return direct_sync, Signal(y = self.y - direct_sync.y, dt = direct_sync.dt)
+        return direct_sync, Signal(y=self.y - direct_sync.y, dt=direct_sync.dt)
+
 
 class TransferFunction:
     """Transfer Fkt Class
@@ -425,7 +423,6 @@ class TransferFunction:
         else:
             print('No valid keywords provided. - See docstring.')
 
-
     def plot_hf(self):
         """Plots spectrum of tf before and after .get_octave_band"""
         if self.n_tot > 128:
@@ -434,7 +431,7 @@ class TransferFunction:
             style = None
         elif self.n_tot <= 128:
             y = self.hf
-            frange = [self.xf[0],self.xf[-1]]
+            frange = [self.xf[0], self.xf[-1]]
             style = 'x'
             print(str(self.xf))
             print(str(self.hf))
@@ -442,7 +439,7 @@ class TransferFunction:
             print('Invalid transfer fkt.')
 
         fig, ax = plt.subplots(1, figsize=(10, 3))
-        ax.plot(self.xf, y, marker = style, linewidth=.25)
+        ax.plot(self.xf, y, marker=style, linewidth=.25)
         ax.set_xlabel('f [Hz]')
         ax.set_xlim(*frange)
         ax.set_xscale('log')
@@ -467,16 +464,17 @@ class TransferFunction:
             l_sum += np.power(el, 2)
         return np.sqrt(l_sum / (i1-i0))
 
-    def get_octave_band(self, fact = 1.):
+    def get_octave_band(self, fact=1.):
         """Return new octave based tf."""
         x = []
         y = []
-        oct_band_lst =create_band_lst(fact)
+        oct_band_lst = create_band_lst(fact)
 
         for f in oct_band_lst:
             x.append(f[2])
             y.append(abs(self.__get_band(*f[0:2])))
-        return TransferFunction(xf = np.array(x), hf = np.array(y))
+        return TransferFunction(xf=np.array(x), hf=np.array(y))
+
 
 class Measurement:
     """Class for handling a whole measurement with multiple Measurement points
@@ -518,7 +516,7 @@ class Measurement:
         for i, el in enumerate(self.mp_lst):
             if el.no == number:
                 del self.mp_lst[i]
-                #return 0
+                # return 0
 
     def plot_overview(self):
         """Plots an overview of Source, Probe and Mics. All units in [m]"""
@@ -564,14 +562,15 @@ class Measurement:
         -------
         Averaged tf
         """
-        l = len(self.mp_lst)
+        n_mp = len(self.mp_lst)
         sum = np.zeros(len(self.mp_lst[0].tf.hf))
 
         for el in self.mp_lst:
             sum += el.tf.hf
-        average = sum / l
-        self.average = TransferFunction(xf = self.mp_lst[0].tf.xf,
-                                        hf = average)
+        average = sum / n_mp
+        self.average = TransferFunction(xf=self.mp_lst[0].tf.xf,
+                                        hf=average)
+
 
 class MeasurementPoint:
     """Class for one measuremnet point it should be included in the 'measurement'-class.
@@ -621,11 +620,11 @@ class MeasurementPoint:
            sets:
                self.beta      angle between probe normal and reflected soundray"""
 
-        x = self.pos['x'] # x-pos on grid
-        y = self.pos['y'] # y-pos on grid
+        x = self.pos['x']  # x-pos on grid
+        y = self.pos['y']  # y-pos on grid
 
-        d_mic = self.distances['mic']     # source - mic
-        d_probe = self.distances['probe'] # mic - probe
+        d_mic = self.distances['mic']      # source - mic
+        d_probe = self.distances['probe']  # mic - probe
 
         r_xy = np.sqrt(     x**2 + y**2)     # Distance in mic plane
         r_xyz = np.sqrt(d_mic**2 + r_xy**2)  # Direct distance source -mic
@@ -640,7 +639,7 @@ class MeasurementPoint:
 
         return travel_to_r, travel_from_r, alpha, self.pos['beta'], r_xyz
 
-    def calc_c_geo(self, norm = True):
+    def calc_c_geo(self, norm=True):
         """Calculates c_geo, uses __geo_norm()"""
 
         # Get geometry
@@ -658,7 +657,7 @@ class MeasurementPoint:
         mul = self.corrections['c_geo']*self.corrections['c_dir']*self.corrections['c_gain']
 
         # If no corrections set, do it
-        if abs(mul-1) < .02: # If corrections in .98-1.02
+        if abs(mul-1) < .02:  # If corrections in .98-1.02
             self.calc_c_geo()
             self.calc_c_dir()
 
@@ -673,7 +672,7 @@ class MeasurementPoint:
             + ';\t c_dir\t '  + str(round(self.corrections['c_dir'],  3)) \
             + ';\t c_gain\t ' + str(round(self.corrections['c_gain'], 3)))
 
-    def calc_c_dir(self):#, signal_direct, signal_ref):
+    def calc_c_dir(self):  # , signal_direct, signal_ref):
         """Currently not implemented - placeholder """
         _ = self.pos['x']  # bc of code evaluation reasons
         return 0
@@ -683,7 +682,7 @@ class MeasurementPoint:
         return 180/np.pi*self.pos['beta']
 
 
-def rotate_sig_lst(sig_lst, cor_range_pre = 0, start_cor_reference=0, start_cor_reflection = 0):
+def rotate_sig_lst(sig_lst, cor_range_pre=0, start_cor_reference=0, start_cor_reflection=0):
     """
     Rotate a signal list relative to the first element.
     Number of rotation samples is determined by correlation between
@@ -718,7 +717,7 @@ def rotate_sig_lst(sig_lst, cor_range_pre = 0, start_cor_reference=0, start_cor_
         start_cor_1 = np.argmax(sig_lst[0].y) - MARGIN
         end_cor_1 = start_cor_1 + \
             np.argmax(sig_lst[0].y[start_cor_1 + 2 * MARGIN:]) \
-                + 3 * MARGIN
+                       + 3 * MARGIN
     else:
         # start_cor_1 = 0
         # end_cor_1 = sig_lst[0].n_tot-1
@@ -751,7 +750,7 @@ def rotate_sig_lst(sig_lst, cor_range_pre = 0, start_cor_reference=0, start_cor_
         i += 1
     sig_lst[0].y = np.roll(sig_lst[0].y, - start_cor_1)
 
-    #return sig_lst
+    # return sig_lst
 
 
 def to_db(x):
@@ -762,6 +761,7 @@ def to_db(x):
     xa = np.asarray(x)            # Cast to array so its polymorph
 
     return 20*np.log10(xa/p0)     # Return according to furmla
+
 
 # TODO: Why is this no method of Sigal class?
 def appl_win(sig, t_start, t_len, form='norm'):
@@ -810,6 +810,7 @@ def appl_win(sig, t_start, t_len, form='norm'):
 
     return Signal(y=y, dt=sig.dt), w
 
+
 def create_band_lst(fact=1):
     """Returns list of bands for octave or deca spectrum generation"""
 
@@ -817,14 +818,16 @@ def create_band_lst(fact=1):
 
     fd = 2**(1/2*fact)
     f_low = [round(centre/fd, 1) for centre in f_centre]
-    f_up = [round(centre*fd,1) for centre in f_centre]
+    f_up = [round(centre*fd, 1) for centre in f_centre]
 
     return [list(i) for i in zip(*[f_low, f_up, f_centre])]
 
-def dbg_info(txt, verbose = False):
+
+def dbg_info(txt, verbose=False):
     """Print debug info if global VERBOSE = True"""
     if verbose:
         print(str(datetime.now().time()) + ' - ' + txt)
+
 
 def pre_process_one_measurement(PATH, sig_name, F_up, u):
     """ Performs Time synchronous averaging on impulse domain of  singal list.
@@ -846,14 +849,14 @@ def pre_process_one_measurement(PATH, sig_name, F_up, u):
 
     for el in sig_name:
         # Load signal from path to subsignallist in signallist
-        sig_raw_lst.append(Signal(path = PATH, name = el))
+        sig_raw_lst.append(Signal(path=PATH, name=el))
         sig_raw_lst[-1].resample(F_up)
 
         sig_imp_lst.append(sig_raw_lst[-1].impulse_response(u))
 
     rotate_sig_lst(sig_imp_lst)
 
-    avg_sig = Signal(signal_lst_imp = sig_imp_lst)
+    avg_sig = Signal(signal_lst_imp=sig_imp_lst)
     return avg_sig
 
 
@@ -864,9 +867,9 @@ if __name__ == "__main__":
     F_up = 500e3
     par_sweep = (22.0, 1., 2.2e+04)
 
-    u = Signal(par_sweep = par_sweep, dt = 1/F_up)
+    u = Signal(par_sweep=par_sweep, dt=1/F_up)
 
-    sig_345 = (Signal(path = TARGET_DIR, name = sig_3_name))
+    sig_345 = (Signal(path=TARGET_DIR, name=sig_3_name))
 
     sig_345.resample(500e3)
 
@@ -875,10 +878,10 @@ if __name__ == "__main__":
     if True:
         print('Generation of exitation:')
         # %timeit for each
-        Signal(par_sweep = par_sweep, dt = 1/F_up)
+        Signal(par_sweep=par_sweep, dt=1/F_up)
 
         print('Load of wav file:')
-        Signal(path = TARGET_DIR, name = sig_3_name)
+        Signal(path=TARGET_DIR, name=sig_3_name)
 
         print('Resample:')
         sig_345.resample(F_up)
