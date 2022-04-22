@@ -46,7 +46,7 @@ F_up = 500e3
 ########## Please specify where the Files are ##############
 ############################################################
 
-AVG_DIR = 'C:/Users/gmeinwieserch/Documents/Python/Reflection/Work_Dir/20220119_1513_avg/'
+AVG_DIR = 'C:/Users/gmeinwieserch/Documents/Python/Reflection/Work_Dir/20220210_0957_avg/'
 NAME = 'IMP_%s.wav'
 
 NR = {'Wand_0_0': ['Wall - LR = 0 m, H = 0 m, NeutrH = 1.6 m'],

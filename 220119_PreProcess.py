@@ -16,7 +16,7 @@
 # 1. Import, Base Settings (System) and Base Settings (User)
 from reflection_definitions import Signal, rotate_sig_lst
 from os import mkdir, path
-from matplotlib.pyplot import plt
+import matplotlib.pyplot as plt
 
 from datetime import datetime
 now = datetime.now().strftime('%Y%m%d_%H%M')
@@ -121,3 +121,5 @@ for position in NR.keys():
 
     imp_avg_down = imp_avg.resample(in_Sample)
     imp_avg_down.write_wav(name=AVG_DIR + '/IMP_' + position + '.wav', F_samp=in_Sample)
+
+# %%
