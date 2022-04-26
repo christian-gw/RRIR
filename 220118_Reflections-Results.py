@@ -42,8 +42,8 @@ VERBOSE = False
 F_up = 500e3
 
 ############################################################
-########## User Interaction Starts Here       ##############
-########## Please specify where the Files are ##############
+# ######## User Interaction Starts Here       ##############
+# ######## Please specify where the Files are ##############
 ############################################################
 
 AVG_DIR = 'C:/Users/gmeinwieserch/Documents/Python/Reflection/Work_Dir/20220210_0957_avg/'
@@ -67,7 +67,7 @@ POS = {'Wand_0_0':  [0,   0],
        'Direct_.8':  [0,   0]}
 
 ################################################################
-######### Please specify the exitation pars        #############
+# ####### Please specify the exitation pars        #############
 ################################################################
 par_sweep = [63, 10, 5e3]   # parameter of sweep [fstart, T, fend]
 

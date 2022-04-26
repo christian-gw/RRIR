@@ -59,6 +59,7 @@ class Signal:
 
         # Init answer signals
         if 'path' in kwargs and 'name' in kwargs:
+            # TODO Replace by Librosa to be more versatile
             path = kwargs.get('path', None)
             name = kwargs.get('name', None)
 
@@ -208,7 +209,7 @@ class Signal:
                         analog=False, output='sos', fs=1/self.dt)
 
         filt = sg.sosfilt(sos, self.y)
-        #self.y = filt
+        # self.y = filt
         return Signal(y=filt, dt=self.dt)
 
     def resample(self, Fs_new):
@@ -596,7 +597,7 @@ class MeasurementPoint:
         self.tf = transfer_function
 
         self.distances = {'mic': distances[0],
-                           'probe': distances[1]}
+                          'probe': distances[1]}
 
         self.corrections = {'c_geo': 1.,
                             'c_dir': 1.,
@@ -668,8 +669,8 @@ class MeasurementPoint:
                                  * self.corrections['c_dir'] \
                                  * self.corrections['c_gain']
             self.corrections['applied'] = True
-            print('c_geo\t '  + str(round(self.corrections['c_geo'],  3)) \
-            + ';\t c_dir\t '  + str(round(self.corrections['c_dir'],  3)) \
+            print('c_geo\t '  + str(round(self.corrections['c_geo'],  3))
+            + ';\t c_dir\t '  + str(round(self.corrections['c_dir'],  3))
             + ';\t c_gain\t ' + str(round(self.corrections['c_gain'], 3)))
 
     def calc_c_dir(self):  # , signal_direct, signal_ref):
@@ -682,9 +683,9 @@ class MeasurementPoint:
         return 180/np.pi*self.pos['beta']
 
 
-def rotate_sig_lst(sig_lst, cor_range_pre=0, start_cor_reference=0, start_cor_reflection=0):
+def rotate_sig_lst(sig_lst, cor_range_pre=0, start_cor_reference=0, start_cor_reflection=0, fix_shift=0):
     """
-    Rotate a signal list relative to the first element.
+    Rotate a signal list so all impulses are sync and at start of file.
     Number of rotation samples is determined by correlation between
     highest and following peak +-100 samp.
 
@@ -717,7 +718,7 @@ def rotate_sig_lst(sig_lst, cor_range_pre=0, start_cor_reference=0, start_cor_re
         start_cor_1 = np.argmax(sig_lst[0].y) - MARGIN
         end_cor_1 = start_cor_1 + \
             np.argmax(sig_lst[0].y[start_cor_1 + 2 * MARGIN:]) \
-                       + 3 * MARGIN
+                      + 3 * MARGIN
     else:
         # start_cor_1 = 0
         # end_cor_1 = sig_lst[0].n_tot-1
@@ -733,7 +734,7 @@ def rotate_sig_lst(sig_lst, cor_range_pre=0, start_cor_reference=0, start_cor_re
             start_cor_2 = np.argmax(el.y) - MARGIN
             end_cor_2 = start_cor_2\
                 + np.argmax(el.y[start_cor_2 + 2*MARGIN:]) \
-                    + 3 * MARGIN
+                + 3 * MARGIN
         else:
             # else use preset range
             start_cor_2 = int(start_cor_reflection/el.dt)
@@ -748,9 +749,9 @@ def rotate_sig_lst(sig_lst, cor_range_pre=0, start_cor_reference=0, start_cor_re
         # shift every signal by 'shifter' values
         # np.roll(sig_lst[i] and [0]) makes sure, that all imp resp. start
         # at the same time and no reflection tail is split by fileborders
-        sig_lst[i].y = np.roll(el.y, -shifter-start_cor_1)
+        sig_lst[i].y = np.roll(el.y, -shifter-start_cor_1+fix_shift)
         i += 1
-    sig_lst[0].y = np.roll(sig_lst[0].y, - start_cor_1)
+    sig_lst[0].y = np.roll(sig_lst[0].y, - start_cor_1+fix_shift)
 
     # return sig_lst
 

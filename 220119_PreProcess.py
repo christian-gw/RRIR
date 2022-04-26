@@ -25,8 +25,8 @@ VERBOSE = False
 F_up = 500e3
 
 ############################################################
-########## User Interaction Starts Here       ##############
-########## Please specify where the Files are ##############
+# ######## User Interaction Starts Here       ##############
+# ######## Please specify where the Files are ##############
 ############################################################
 
 TARGET_DIR = 'C:/Users/gmeinwieserch/Documents/Python/Reflection/Work_Dir/'
@@ -45,7 +45,7 @@ NR = {'Wand_0_0':  ['27'],  # LR =   0, H =   0, NeutrH = 1.6
 
 
 ################################################################
-######### Please specify the exitation pars        #############
+# ####### Please specify the exitation pars        #############
 ################################################################
 par_sweep = [63, 10, 5e3]   # parameter of sweep [fstart, T, fend]
 in_Sample = 48e3
@@ -94,8 +94,8 @@ for position in NR.keys():
 # 1. Import, Base Settings (System) and Base Settings (User)
 
 ############################################################
-########## User Interaction Starts Here       ##############
-########## Please specify where the Files are ##############
+# ######## User Interaction Starts Here       ##############
+# ######## Please specify where the Files are ##############
 ############################################################
 
 IMP_DIR = path.join(TARGET_DIR, now + '_imp')
