@@ -24,7 +24,6 @@ import numpy as np
 import scipy.signal as sig
 import matplotlib.pyplot as plt
 from numpy.fft import fft, ifft, fftfreq
-from scipy.io import wavfile
 from scipy.signal.windows import tukey
 import librosa as lr
 
@@ -93,17 +92,23 @@ def load_lr(path):
     raw = lr.load(path, sr=96000)
     return raw[0], len(raw[0])
 
+
 # Sweep Parameters
 f1 = 50
 f2 = 5e3
 fs = 96e3
 T = 10
+
 Tp = 5
 n_sweep = 2
 cut_start = 7.5
+path = """C:/Users/gmeinwieserch/Desktop/20220420_Messung im Gang/"""
+files = {1: """Gang_1.WAV""",
+         2: """Gang_2.WAV""",
+         3: """Gang_3.WAV""",
+         4: """Gang_4.WAV"""}
 
 # %%codecell # 2. Sweep and inv creation
-
 
 t = np.arange(0, T*fs)/fs
 R = np.log(f2/f1)
@@ -112,77 +117,61 @@ fft_length = 2*T*fs
 
 # Sweep generation
 x = np.sin((2*np.pi*f1*T/R)*(np.exp(t*R/T)-1))
-# fig, ax = plot_signal(*fft_calc(x, len(x)),
-#                       'e-sweep')
+
 print('Created sweep signal...')
 
 # Algebraic sweep inversion
 k = np.exp(t*R/T)
 f = x[::-1]/k
-# f = filter(f, f1*.9, f2*1.1, fs)
 
-# fig, ax = plot_signal(*fft_calc(f, len(f)),
-#                       'Algebraic inverse')
-print('Inverted signal algebraically and nummerically...')
+print('Inverted signal algebraically ...')
 
 # %%codecell # 3. Load wav
-path = """C:\\Users\\gmeinwieserch\\Desktop\\20220420_Messung im Gang\\Gang_1.WAV"""
+h_avg = []
+h_tot = []
+for key in files:
+    f_path = path + files[key]
 
-y_m, n_tot_m = load_lr(path)
+    y_m, n_tot_m = load_lr(f_path)
 
-# fig, ax = plot_signal(*fft_calc(y_m, n_tot_m*2), 'Measured signal')
-print('Loaded exemplaric soundfile...')
+    print('Loaded soundfile...')
 
-# %%codecell # 4. Comparison between conv of fft and algebraic inv
-# Deconvolve exitation by division by FFT(exitation)
-complete_N = int(n_tot_m+fft_length)
+    # %%codecell
+    # 4. Comparison between conv of fft and algebraic inv
+    # Deconvolve exitation by division by FFT(exitation)
+    complete_N = int(n_tot_m+fft_length)
 
-# Deconvolve exitation by division algebraic filter by fft*fft
-h2 = ifft(fft(y_m, complete_N) * fft(f, complete_N), complete_N)
+    # Deconvolve exitation by division algebraic filter by fft*fft
+    h2 = ifft(fft(y_m, complete_N) * fft(f, complete_N), complete_N)
+    h_tot.append(h2)
 
-# fig, ax = plot_signal(*fft_calc(h2, len(h2)),
-#                       'h - measurement*fft(algebraic inv)')
-# # Plot timesignal logarithmic
-# ax[0].clear()
-# ax[0].plot(20*np.log10(np.abs(h2)/max(np.abs(h2))), linewidth=.25)
-# ax[0].set_ylim(-100, 0)
-print('Inverted with nummeric filter...')
+    print('Inverted with algebraic filter...')
 
-# %%codecell # 5. Sync and Average the impulse responses of algebraic inv
-h = []
-delta = []
-span = int((Tp + T)*fs)        # Number of samples for one sweep + silence
-hred = h2[int(cut_start*fs):]  # Impulse - Number of samples to cut from begin
+    # 5. Sync and Average the impulse responses of algebraic inv
+    h = []
+    delta = []
+    span = int((Tp + T)*fs)        # Number of samples for one sweep + silence
+    hred = h2[int(cut_start*fs):]  # Impulse - samples to cut from begin
 
-for i in range(n_sweep):
-    h.append(np.real(hred[i*span:(i+1)*span]))
+    for i in range(n_sweep):
+        h.append(np.real(hred[i*span:(i+1)*span]))
 
-    cor = sig.correlate(h[0], h[i])  # Sync corrections
-    delta.append(np.argmax(cor))
+        cor = sig.correlate(h[0], h[i])  # Sync corrections
+        delta.append(np.argmax(cor))
 
-    # fak = max(h[0])/max(h[i])      # Amplitude corrections
-    fak = 1
+        # fak = max(h[0])/max(h[i])      # Amplitude corrections
+        fak = 1
 
-    # Syncing with np.take(... 'wrap') instead of index to assure circularity
-    h[i] = fak * np.take(h[i],
-                         range(delta[0]-delta[i],
-                               delta[0]-delta[i]+len(h[i])),
-                         mode='wrap')
-h_avg = np.average(h, axis=0)        # Averaging of synced signals
-print('Synced and averaged the sweeps...')
+# Syncing with np.take(... 'wrap') instead of index to assure circularity
+        h[i] = fak * np.take(h[i],
+                             range(delta[0]-delta[i],
+                                   delta[0]-delta[i]+len(h[i])),
+                             mode='wrap')
+    h_avg.append(np.average(h, axis=0))        # Averaging of synced signals
+    print('Synced and averaged the sweeps...')
 
-# plt.plot(h[0], lw=.25)
-# plt.plot(h[1], lw=.25)
-# # plt.plot(h[2][0:], lw=.25)
-# plt.xlim(.6875e6, .6876e6)
-
-# fig, ax = plt.subplots()
-# [ax.plot(hi, lw=.25) for hi in h]
-
-fig, ax = plot_signal(h_avg,
-                      *fft_calc(h_avg, len(h_avg))[1:],
-                      'Averaged Impulse Response')
-
+for el in zip(range(1, 5), h_tot):
+    plt.plot(np.real(el[1]), label=el[0], lw=.25)
+    plt.legend()
 plt.show()
-# wavfile.write('Testimpulse.wav', int(48e3), np.float32(np.abs(h2)))
 # %%
