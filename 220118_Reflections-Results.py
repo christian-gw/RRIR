@@ -79,7 +79,7 @@ par_sweep = [63, 10, 5e3]   # parameter of sweep [fstart, T, fend]
 for position in NR.keys():
     # Loop will load wav signals to a list wich is the value of the NR dict
     # = Complete Reflection
-    del NR[position][1:]  # Reset List after title field
+    del NR[position][1:]  # Reset List after title field (Multirun reason)
     NR[position].append(Signal(path=AVG_DIR, name=NAME %
                         (position)))  # Append signal obj
 
@@ -90,7 +90,7 @@ ax.set_xlim(0, .025)
 ax.set_title('Direct_.8')
 fig.canvas.manager.set_window_title('Direct_.8')
 
-# plt.show()
+# plt.show()  # Required for command line exec
 
 # %% codecell
 # 3. Correct Signal

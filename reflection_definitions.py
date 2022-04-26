@@ -746,6 +746,8 @@ def rotate_sig_lst(sig_lst, cor_range_pre=0, start_cor_reference=0, start_cor_re
                                mode='full'))
 
         # shift every signal by 'shifter' values
+        # np.roll(sig_lst[i] and [0]) makes sure, that all imp resp. start
+        # at the same time and no reflection tail is split by fileborders
         sig_lst[i].y = np.roll(el.y, -shifter-start_cor_1)
         i += 1
     sig_lst[0].y = np.roll(sig_lst[0].y, - start_cor_1)
