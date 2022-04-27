@@ -22,41 +22,8 @@
 from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
-import librosa as lr
 from reflection_definitions import\
-    Signal, rotate_sig_lst
-
-
-def plot_signal(x, xf, freq, title=''):
-    # subs by plot_y_t
-    """Plot Timesignal, Mag and Ang spectrum
-    x       Timesignal (Will be plotted w.o. time axis.)
-    xf      Complex complete spectrum
-    freq    Frequencyaxis for spectrum
-    title   Title to set on top
-    Returns figure and axis object.
-    """
-    db = lambda x: 20 * np.log10(abs(x)/max(abs(x)))
-    ang = lambda x: np.angle(x)
-
-    fig, ax = plt.subplots(3, figsize=(10, 6))
-    ax[0].plot(np.abs(x), label='Sin-Sweep')
-    ax[1].plot(freq, db(abs(xf)), linewidth=.25)
-    ax[2].plot(freq, ang(xf), linewidth=.25)
-    [a.set_xlim(50) for a in ax[1:]]
-    [a.set_xscale('log') for a in ax[1:]]
-    fig.suptitle(title, size=30)
-    fig.tight_layout()
-    plt.draw()
-    return fig, ax
-
-
-def load_lr(path):
-    """Load data with librosa
-    Returns y, dt, n_tot"""
-    # Not subsable bc of 24bit
-    raw = lr.load(path, sr=96000)
-    return raw[0], raw[1], len(raw[0])
+    Signal  # , rotate_sig_lst
 
 
 # Sweep Parameters
@@ -93,8 +60,10 @@ h_tot = []
 for key in files:
     f_path = path + files[key]
 
-    y_m, _, n_tot_m = load_lr(f_path)
-    y_raw = Signal(y=y_m, dt=1/fs)
+    # y_m, _, n_tot_m = load_lr(f_path)
+    # y_raw = Signal(y=y_m, dt=1/fs)
+    y_raw = Signal(path=path,
+                   name=files[key])
     print('Loaded soundfile...')
 
     # Deconvolve exitation by division algebraic filter by fft*fft
@@ -103,11 +72,13 @@ for key in files:
 
     print('Inverted with convolution filter...')
 
-rotate_sig_lst(h_tot, fix_shift=int(2e3))
-print('Synced signals...')
+# %% codecell
+# rotate_sig_lst(h_tot, fix_shift=.1)
+# print('Synced signals...')
 
 for el in zip(range(1, 5), h_tot):
     plt.plot(np.real(el[1].y), label=el[0], lw=.25)
-    # plt.legend()
+    plt.legend()
 plt.show()
+
 # %%

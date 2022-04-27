@@ -129,12 +129,12 @@ class Signal:
             the exitation must be set mannually.
             dt, T, n_tot, t, xf, y =load_data(path)"""
 
-        raw = lr.load(path)  # (fs,[Data])
+        raw = lr.load(path, sr=None)  # (fs,[Data])
 
         # Get values
         y = np.array(raw[0])
 
-        dt = raw[1]
+        dt = 1/raw[1]
         n_tot = len(y)
         T = dt*n_tot
 
@@ -712,7 +712,11 @@ def rotate_sig_lst(sig_lst,
     """
     Rotate a signal list so all impulses are sync and at start of file.
     Number of rotation samples is determined by correlation between
-    highest and following peak +-100 samp.
+    the most highest and second highest peak +-MARGIN samples by default.
+    Its possible to set the correlation range (for all signals) 
+    and the start of it for reference (first) and all other signals.
+    Its also possible to shift all signals by a specified time,
+    in order to make sure the signal is not cut by the file borders.
 
     Parameters
     ----------
@@ -747,6 +751,9 @@ def rotate_sig_lst(sig_lst,
         end_cor_1 = start_cor_1 + \
             np.argmax(sig_lst[0].y[start_cor_1 + 2 * MARGIN:]) \
             + 3 * MARGIN
+        # DEBUG
+        print('start_cor_1 = ' + str(start_cor_1))
+        print('end_cor_1 = ' + str(end_cor_1))
     else:
         # start_cor_1 = 0
         # end_cor_1 = sig_lst[0].n_tot-1
@@ -773,15 +780,15 @@ def rotate_sig_lst(sig_lst,
             np.argmax(sg.correlate(sig_lst[0].y[start_cor_1:end_cor_1],
                                    el.y[start_cor_2:end_cor_2],
                                    mode='full'))
-
+        
         # shift every signal by 'shifter' values
         # np.roll(sig_lst[i] and [0]) makes sure, that all imp resp. start
         # at the same time and no reflection tail is split by fileborders
 
-        fix_shift = fix_shift/sig_lst[0].dt
-        sig_lst[i].y = np.roll(el.y, -shifter-start_cor_1+fix_shift)
+        fix_shift_int = int(fix_shift/sig_lst[0].dt)
+        sig_lst[i].y = np.roll(el.y, -shifter-start_cor_1+fix_shift_int)
         i += 1
-    sig_lst[0].y = np.roll(sig_lst[0].y, - start_cor_1+fix_shift)
+    sig_lst[0].y = np.roll(sig_lst[0].y, - start_cor_1+fix_shift_int)
 
     # return sig_lst
 
