@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from scipy.fft import fft, ifft, fftfreq  # , fftshift
 from scipy.signal.windows import tukey, blackmanharris  # , hann
 import scipy.signal as sg
-from scipy.io import wavfile
+import librosa as lr
 import numpy as np
 import os
 
@@ -21,17 +21,27 @@ class Signal:
     """Signal Class
         Initialisation depends on used kwargs:
         - 'path' and 'name' of wav file to load
+            path : string - path to the file
+            name : string - name of the file
         - 'sweep_par' and 'dt' to create sweep
+            sweep_par : tuple of form (start_freq, sweep_dur, end_freq)
+            dt : float - time base of the signal (1/fs)
         - 'signal_lst_imp' to average several time aligned impulses
+            signal_lst_imp : array - Array of form [Signal, Signal, ...]
         - 'y' and 'dt' for naive input of y signal
+            y : array - np.array with Soundpressurelevels (e.g. from wav)
+            dt : float - timebase of the signal (1/fs) 
 
         Methods:
-        - 'impulse_response' calculate and return impulse response from measured sweep and exitation
-        - 'filter_y' filter signal and return filtered signal
-        - 'resample' resample signal and return resampled (no antialiasing)
-        - 'cut_signal' cut signal between specified times and return new signal
-        - 'plot_y_t' 'plot_y_f' plot time or frequency signal
-        - 'plot_spec_transform' plot spectrogram of transformation like in method impulse_response
+        - 'impulse_response':
+            Calc and return impulse response from measured sweep and exitation
+        - 'filter_y': filter signal and return filtered signal
+        - 'resample': Resample signal and return resampled (no antialiasing)
+        - 'cut_signal': 
+            Cut signal between specified times and return new signal
+        - 'plot_y_t' 'plot_y_f:' Plot time or frequency signal
+        - 'plot_spec_transform':
+            Plot spectrogram of transformation like in method impulse_response
         -
         Attributes:
         - bool: exitation,
@@ -59,7 +69,6 @@ class Signal:
 
         # Init answer signals
         if 'path' in kwargs and 'name' in kwargs:
-            # TODO Replace by Librosa to be more versatile
             path = kwargs.get('path', None)
             name = kwargs.get('name', None)
 
@@ -103,10 +112,11 @@ class Signal:
             self.n_tot = len(self.y)
             self.T = self.dt * self.n_tot
             self.axis_arrays['t'] = np.linspace(0, self.T, self.n_tot)
-            self.axis_arrays['xf'] = fftfreq(self.n_tot, self.dt)[:self.n_tot//2]
+            self.axis_arrays['xf'] =\
+                fftfreq(self.n_tot, self.dt)[:self.n_tot//2]
 
         else:
-            print('No valid keywords provided. - See docstring.')
+            print('No valid keywords provided. See docstring of Signal class.')
 
         self.__fft_all()
 
@@ -115,15 +125,16 @@ class Signal:
 
     def __load_data(self, path):
         """Load Data from file:
-            .wav --> Load only answer and calculate metainformation the exitation was set mannually.
+            .wav --> Load only answer and calculate metainformation,
+            the exitation must be set mannually.
             dt, T, n_tot, t, xf, y =load_data(path)"""
 
-        raw = wavfile.read(path)  # (fs,[Data])
+        raw = lr.load(path)  # (fs,[Data])
 
         # Get values
-        y = np.array(raw[1])
+        y = np.array(raw[0])
 
-        dt = 1/raw[0]
+        dt = raw[1]
         n_tot = len(y)
         T = dt*n_tot
 
@@ -253,7 +264,8 @@ class Signal:
         ax.plot(self.axis_arrays['t'], self.y, linewidth=1)
         ax.set_xlabel('Time [s]')
         fig.suptitle(headline)
-        # plt.show()  # If not in, no show when exec, if in, no work on axis return
+        # plt.show()
+        # If not in, no show when exec, if in, no work on axis return
         return fig, ax
 
     def plot_y_f(self, headline=''):
@@ -275,13 +287,14 @@ class Signal:
         f_range = [50, 1/(3*self.dt)]
 
         # Spectrogram
-        fc, tc, Spec = sg.spectrogram(self.y.real,             # signal
-            fs=1/self.dt,          # Samplingrate
+        fc, tc, Spec = sg.spectrogram(self.y.real,           # signal
+                                      fs=1/self.dt,          # Samplingrate
             # tuckey is rising cos, uniform, falling cos window
-            window=('tukey', .25),
+                                      window=('tukey', .25),
             # alpha factor specifies the proportion wich is cos
-            nperseg=n_win,         # Blocksize
-            noverlap=1*n_win//8)    # Overlap Samples overlap (default nperseg//8)
+                                      nperseg=n_win,         # Blocksize
+            # Overlap Samples overlap (default nperseg//8)
+                                      noverlap=1*n_win//8)
         # Alpha of tuckey.25 and nperseg//8 means, that the
         # Overlap is in the rising/faling cos range of the win
 
@@ -333,7 +346,8 @@ class Signal:
         y = Signal(y=np.copy(np.trim_zeros(self.y)), dt=self.dt)
         y.resample(F_samp)
         np.trim_zeros(y.y)
-        wavfile.write(name, int(F_samp), np.float32(y.y))
+        lr.write_wav(name, np.float32(y.y), int(F_samp))
+        # wavfile.write(name, int(F_samp), np.float32(y.y))
 
     def correct_refl_component(self, direct, t_start, t_dur):
         """
@@ -359,9 +373,11 @@ class Signal:
         pos = np.argmax(corell)
         fak = max(self.y)/max(direct.y)
 
-        direct_sync = Signal(y=fak * np.roll(self.y, -int(len(corell)/2)-pos), dt=direct.dt)
+        direct_sync = Signal(y=fak * np.roll(self.y, -int(len(corell)/2)-pos),
+                             dt=direct.dt)
         direct_sync.plot_y_t()
-        return direct_sync, Signal(y=self.y - direct_sync.y, dt=direct_sync.dt)
+        return direct_sync, Signal(y=self.y - direct_sync.y,
+                                   dt=direct_sync.dt)
 
 
 class TransferFunction:
@@ -372,10 +388,12 @@ class TransferFunction:
         - 'signal', 'in_win' and 're_win' (both [start, duration]) tf
           from two windowed sections of signal
         Methods:
-        - 'convolute_f' returns a convolution of a signal and the tf with length of signal
-        - '__get_band' returns RMS value within a specified band
-        - 'get_octave_band' returns tf in octave bands
-        - 'plot_ht', 'plot_hf' and plot_oct plot time or frequency representation of tf
+        - 'convolute_f':
+            Returns a convolution of a signal and the tf with length of signal
+        - '__get_band': Returns RMS value within a specified band
+        - 'get_octave_band': Returns tf in octave bands
+        - 'plot_ht', 'plot_hf' and 'plot_oct':
+            Plot time or frequency representation of tf
         Attributes:
         - bool: exitation,
         - double:      dt,   T, frange
@@ -449,7 +467,8 @@ class TransferFunction:
 
     # Fkt for convolution of transferfct with signal
     def convolute_f(self, sig):
-        """Convolutes two signals in freq domain (multiplication) after resample.)"""
+        """Convolutes two signals in freq domain (multiplication),
+        after resample.)"""
 
         h_samp = sg.resample(self.hf, len(sig.y_f))
         conv_f = h_samp*sig.y_f
@@ -480,7 +499,8 @@ class TransferFunction:
 class Measurement:
     """Class for handling a whole measurement with multiple Measurement points
          containing one signal each.
-       If there are multiple signals (should be), averaging before creation of mp is advised.
+       If there are multiple signals (should be), 
+       averaging before creation of Measurement Point is advised.
        Attributes:
          self.m_name   Name of the Measurement (Meta data class is planned)
          self.d_mic    Distance
@@ -574,7 +594,8 @@ class Measurement:
 
 
 class MeasurementPoint:
-    """Class for one measuremnet point it should be included in the 'measurement'-class.
+    """Class for one measuremnet point,
+    it should be included in the 'Measurement'-class.
        Norm suggests 3x3 measurement grid with distances .4 m, numbered like a phone.
 
        Attributes:
@@ -631,8 +652,8 @@ class MeasurementPoint:
         r_xyz = np.sqrt(d_mic**2 + r_xy**2)  # Direct distance source -mic
 
         # Traveled distance to and from reflection point
-        r_to_ref_xy   = r_xy*(d_mic + d_probe)/(2*d_probe + d_mic)
-        travel_to_r   = np.sqrt((d_mic + d_probe)**2 + r_to_ref_xy**2)
+        r_to_ref_xy = r_xy*(d_mic + d_probe)/(2*d_probe + d_mic)
+        travel_to_r = np.sqrt((d_mic + d_probe)**2 + r_to_ref_xy**2)
         travel_from_r = np.sqrt(d_probe**2 + (r_xy - r_to_ref_xy)**2)
 
         alpha = np.arctan(r_xy/d_mic)
@@ -670,8 +691,8 @@ class MeasurementPoint:
                                  * self.corrections['c_gain']
             self.corrections['applied'] = True
             print('c_geo\t '  + str(round(self.corrections['c_geo'],  3))
-            + ';\t c_dir\t '  + str(round(self.corrections['c_dir'],  3))
-            + ';\t c_gain\t ' + str(round(self.corrections['c_gain'], 3)))
+                  + ';\t c_dir\t '  + str(round(self.corrections['c_dir'],  3))
+                  + ';\t c_gain\t ' + str(round(self.corrections['c_gain'], 3)))
 
     def calc_c_dir(self):  # , signal_direct, signal_ref):
         """Currently not implemented - placeholder """
@@ -683,7 +704,11 @@ class MeasurementPoint:
         return 180/np.pi*self.pos['beta']
 
 
-def rotate_sig_lst(sig_lst, cor_range_pre=0, start_cor_reference=0, start_cor_reflection=0, fix_shift=0):
+def rotate_sig_lst(sig_lst,
+                   cor_range_pre=0,
+                   start_cor_reference=0,
+                   start_cor_reflection=0,
+                   fix_shift=0):
     """
     Rotate a signal list so all impulses are sync and at start of file.
     Number of rotation samples is determined by correlation between
@@ -692,23 +717,26 @@ def rotate_sig_lst(sig_lst, cor_range_pre=0, start_cor_reference=0, start_cor_re
     Parameters
     ----------
     sig_lst : List of signal objects to rotate
-    cor_range_pre : TYPE, optional - time over wich to correlate
-        DESCRIPTION. The default is 0. If not set otherwise
-        If set otherwise
-    start_cor_reference : TYPE, optional - time to start correlation on reference
-        DESCRIPTION. The default is 0. If not set otherwise
-        If set otherwise
-    start_cor_reflection : TYPE, optional - time to start correlation on reflection
-        DESCRIPTION. The default is 0. If not set otherwise
-        If set otherwise
+    cor_range_pre : float, optional - time [s] over wich to correlate
+        The default is 0. If not set otherwise
+        If set otherwise it changes size of correlation window
+    start_cor_reference : float, optional - time [s] to start corr on ref-sig
+        The default is 0. That means Corr range is determined by max search
+        If set otherwise given start of cor range is used.
+    start_cor_reflection : float, optional - time to start corr on shift sig
+        The default is 0. That means Corr range is determidned by max search
+        If set otherwise given start is used
+    fix_shift: float, optional - time to shift all signals to the right
+        The default is 0. No shift is applied.
+        Use if you want to avoid a impulse beeing split in parts by file end.
 
     Returns
     -------
-    None. But changes sig_lst.
+    None. But changes sig_lst by rotating elements.
 
     """
-# TODO: Realy refactor and rethinkt this function
-    MARGIN = 200
+
+    MARGIN = 200  # cor range enhance - see next comment
     if cor_range_pre == 0:
         # If no cor_range is specified: find it:
         # Cor between
@@ -718,7 +746,7 @@ def rotate_sig_lst(sig_lst, cor_range_pre=0, start_cor_reference=0, start_cor_re
         start_cor_1 = np.argmax(sig_lst[0].y) - MARGIN
         end_cor_1 = start_cor_1 + \
             np.argmax(sig_lst[0].y[start_cor_1 + 2 * MARGIN:]) \
-                      + 3 * MARGIN
+            + 3 * MARGIN
     else:
         # start_cor_1 = 0
         # end_cor_1 = sig_lst[0].n_tot-1
@@ -742,13 +770,15 @@ def rotate_sig_lst(sig_lst, cor_range_pre=0, start_cor_reference=0, start_cor_re
 
         # Get shifter by corelation in determined range
         shifter = (start_cor_2-start_cor_1) + end_cor_2-start_cor_2 - \
-        np.argmax(sg.correlate(sig_lst[0].y[start_cor_1:end_cor_1],
-                               el.y[start_cor_2:end_cor_2],
-                               mode='full'))
+            np.argmax(sg.correlate(sig_lst[0].y[start_cor_1:end_cor_1],
+                                   el.y[start_cor_2:end_cor_2],
+                                   mode='full'))
 
         # shift every signal by 'shifter' values
         # np.roll(sig_lst[i] and [0]) makes sure, that all imp resp. start
         # at the same time and no reflection tail is split by fileborders
+
+        fix_shift = fix_shift/sig_lst[0].dt
         sig_lst[i].y = np.roll(el.y, -shifter-start_cor_1+fix_shift)
         i += 1
     sig_lst[0].y = np.roll(sig_lst[0].y, - start_cor_1+fix_shift)

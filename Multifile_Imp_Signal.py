@@ -21,31 +21,10 @@
 # %%codecell # 1. Import and fun definition
 from __future__ import division
 import numpy as np
-import scipy.signal as sig
 import matplotlib.pyplot as plt
-from numpy.fft import fft, ifft, fftfreq
-from scipy.signal.windows import tukey
 import librosa as lr
 from reflection_definitions import\
     Signal, rotate_sig_lst
-
-
-def filter(x_b, lo, hi, fs):
-    # replace by filter_y(self, frange=())
-    """Use 5.O Chebishef filter on signal
-    x_b Unfiltered signal
-    l   Lower Frequency
-    h   Higher Frequency
-    fs  Samplingrate
-    Returns sampled signal
-    """
-    cheb = sig.cheby1(5,
-                      1,
-                      (lo, hi),
-                      btype='bandpass',
-                      output='sos',
-                      fs=fs)
-    return sig.sosfiltfilt(cheb, x_b)
 
 
 def plot_signal(x, xf, freq, title=''):
@@ -72,28 +51,9 @@ def plot_signal(x, xf, freq, title=''):
     return fig, ax
 
 
-def fft_calc(x, length, win=False):
-    # subs by signal.y_f, signal.axis_array['x_f']
-    """Calc FFT for plot_signal fkt
-    x       Signal to work with
-    length  length to force on FFT
-    win     Bool-Use tuckey win
-    Returns input, spectrum, freq_axis"""
-
-    if win is False:
-        win = np.ones(len(x))
-    else:
-        win = tukey(len(x), alpha=.05, sym=False)
-
-    x = x*win
-
-    xf = fft(x, length)
-    freq = fftfreq(n=len(xf), d=1/fs)
-    return x, xf, freq
-
-
 def load_lr(path):
-    """Load data with librosa"""
+    """Load data with librosa
+    Returns y, dt, n_tot"""
     # Not subsable bc of 24bit
     raw = lr.load(path, sr=96000)
     return raw[0], raw[1], len(raw[0])
@@ -122,7 +82,7 @@ R = np.log(f2/f1)
 fft_length = 2*T*fs
 
 # Sweep generation
-x = Signal(par_sweep=(f1, T, f2), dt = 1/fs)
+x = Signal(par_sweep=(f1, T, f2), dt=1/fs)
 
 print('Created sweep signal...')
 
@@ -136,7 +96,6 @@ for key in files:
     y_m, _, n_tot_m = load_lr(f_path)
     y_raw = Signal(y=y_m, dt=1/fs)
     print('Loaded soundfile...')
-
 
     # Deconvolve exitation by division algebraic filter by fft*fft
     h2 = y_raw.impulse_response(x)

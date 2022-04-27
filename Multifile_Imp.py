@@ -136,7 +136,6 @@ for key in files:
 
     print('Loaded soundfile...')
 
-    # %%codecell
     # 4. Comparison between conv of fft and algebraic inv
     # Deconvolve exitation by division by FFT(exitation)
     complete_N = int(n_tot_m+fft_length)
