@@ -55,8 +55,8 @@ class Mic:
 
 class AmbiMic:
     """Class to hold information about the Ambisonics-Mic.
-    Takes 
-      r - Radius of 1.O Ambisonics mic 
+    Takes
+      r - Radius of 1.O Ambisonics mic
       a - alpha value which specifies Form"""
     def __init__(self,
                  R,
@@ -118,7 +118,8 @@ class AmbiMic:
         according to Gerzon_1975. The formula was used from:
         http://pcfarina.eng.unipr.it/Public/B-format/A2B-conversion/A2B.htm"""
 
-        num = np.sqrt(6)*np.array([1/3*np.power(self.R/self.c, 2), self.R/self.c, 1])
+        num = np.sqrt(6) * \
+            np.array([1/3*np.power(self.R/self.c, 2), self.R/self.c, 1])
         den = np.sqrt(6)*np.array([1/3*self.R/self.c])
         self.hxyz = signal.tf2sos(num,
                                   den)
@@ -196,6 +197,7 @@ class ambiSig:
         Filenames are specified in dictionary name."""
         for key in names:
             self.b_format[key-1].write_wav(names[key])
+
 
 def test(i):
     """Used to test the unittest in test_Ambi.py"""
