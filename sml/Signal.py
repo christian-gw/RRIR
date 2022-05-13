@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 14 17:08:55 2021
-
-@author: gmeinwieserch
-Helper functions for evaluation of RIRs from Wave files
-"""
-
 from datetime import datetime
 import matplotlib.pyplot as plt
 from scipy.fft import fft, ifft, fftfreq  # , fftshift
@@ -14,6 +6,13 @@ import scipy.signal as sg
 import librosa as lr
 import numpy as np
 import os
+from scipy.io import wavfile
+
+
+def dbg_info(txt, verbose=False):
+    """Print debug info if global VERBOSE = True"""
+    if verbose:
+        print(str(datetime.now().time()) + ' - ' + txt)
 
 
 # Signal class
@@ -346,8 +345,8 @@ class Signal:
         y = Signal(y=np.copy(np.trim_zeros(self.y)), dt=self.dt)
         y.resample(F_samp)
         np.trim_zeros(y.y)
-        lr.write_wav(name, np.float32(y.y), int(F_samp))
-        # wavfile.write(name, int(F_samp), np.float32(y.y))
+        # lr.output.write_wav(name, np.float32(y.y), int(F_samp))
+        wavfile.write(name, int(F_samp), np.float32(y.y))
 
     def correct_refl_component(self, direct, t_start, t_dur):
         """
@@ -378,333 +377,6 @@ class Signal:
         direct_sync.plot_y_t()
         return direct_sync, Signal(y=self.y - direct_sync.y,
                                    dt=direct_sync.dt)
-
-
-class TransferFunction:
-    """Transfer Fkt Class
-        Initialisation depends on used kwargs:
-        - 'incoming_sig' and 'reflected_sig' tf of those two signal obj
-        - 'x' and 'hf' to create a tf obj from a external tf
-        - 'signal', 'in_win' and 're_win' (both [start, duration]) tf
-          from two windowed sections of signal
-        Methods:
-        - 'convolute_f':
-            Returns a convolution of a signal and the tf with length of signal
-        - '__get_band': Returns RMS value within a specified band
-        - 'get_octave_band': Returns tf in octave bands
-        - 'plot_ht', 'plot_hf' and 'plot_oct':
-            Plot time or frequency representation of tf
-        Attributes:
-        - bool: exitation,
-        - double:      dt,   T, frange
-        - integer:  n_tot,
-        - array-axis:   t,  xf,
-        - array-signal: hf, ht"""
-
-    def __init__(self, **kwargs):
-        if 'incoming_sig' in kwargs and 'reflected_sig' in kwargs:
-            incoming_sig = kwargs.get('incoming_sig',  None)
-            reflected_sig = kwargs.get('reflected_sig', None)
-
-            self.dt = incoming_sig.dt
-            self.T = incoming_sig.T
-            self.n_tot = incoming_sig.n_tot
-            self.xf = incoming_sig.axis_arrays['xf']
-
-            self.hf = np.copy(reflected_sig.y_f**2 / incoming_sig.y_f**2)
-            self.frange = incoming_sig.frange
-
-        elif 'xf' in kwargs and 'hf' in kwargs:
-            self.xf = kwargs.get('xf', None)
-            self.hf = kwargs.get('hf', None)
-
-            self.n_tot = len(self.hf)
-
-            self.dt = None
-            self.T = None
-
-        elif 'signal' in kwargs and 'in_win' in kwargs and 're_win' in kwargs:
-            sig = kwargs.get('signal', None)
-            in_win = kwargs.get('in_win', None)
-            re_win = kwargs.get('re_win', None)
-
-            self.dt = sig.dt
-            self.T = sig.T
-            self.n_tot = sig.n_tot
-            self.xf = sig.axis_arrays['xf']
-
-            incoming_sig, _ = appl_win(sig, in_win[0], in_win[1], form='norm')
-            reflected_sig, _ = appl_win(sig, re_win[0], re_win[1], form='norm')
-
-            self.hf = np.copy(reflected_sig.y_f**2 / incoming_sig.y_f**2)
-            self.frange = incoming_sig.frange
-
-        else:
-            print('No valid keywords provided. - See docstring.')
-
-    def plot_hf(self):
-        """Plots spectrum of tf before and after .get_octave_band"""
-        if self.n_tot > 128:
-            y = 2.0/self.n_tot * np.abs(self.hf[0:self.n_tot//2])
-            frange = self.frange
-            style = None
-        elif self.n_tot <= 128:
-            y = self.hf
-            frange = [self.xf[0], self.xf[-1]]
-            style = 'x'
-            print(str(self.xf))
-            print(str(self.hf))
-        else:
-            print('Invalid transfer fkt.')
-
-        fig, ax = plt.subplots(1, figsize=(10, 3))
-        ax.plot(self.xf, y, marker=style, linewidth=.25)
-        ax.set_xlabel('f [Hz]')
-        ax.set_xlim(*frange)
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        return fig, ax
-
-    # Fkt for convolution of transferfct with signal
-    def convolute_f(self, sig):
-        """Convolutes two signals in freq domain (multiplication),
-        after resample.)"""
-
-        h_samp = sg.resample(self.hf, len(sig.y_f))
-        conv_f = h_samp*sig.y_f
-        return Signal(y=ifft(conv_f), dt=self.dt)
-
-    # Fkt to generate octave based signal
-    def __get_band(self, f0, f1):
-        i0 = np.where(self.xf > f0-self.xf[0])[0][0]
-        i1 = np.where(self.xf > f1-self.xf[0])[0][0]
-
-        l_sum = 0
-        for el in self.hf[i0:i1]:
-            l_sum += np.power(el, 2)
-        return np.sqrt(l_sum / (i1-i0))
-
-    def get_octave_band(self, fact=1.):
-        """Return new octave based tf."""
-        x = []
-        y = []
-        oct_band_lst = create_band_lst(fact)
-
-        for f in oct_band_lst:
-            x.append(f[2])
-            y.append(abs(self.__get_band(*f[0:2])))
-        return TransferFunction(xf=np.array(x), hf=np.array(y))
-
-
-class Measurement:
-    """Class for handling a whole measurement with multiple Measurement points
-         containing one signal each.
-       If there are multiple signals (should be),
-       averaging before creation of Measurement Point is advised.
-       Attributes:
-         self.m_name   Name of the Measurement (Meta data class is planned)
-         self.d_mic    Distance
-         self.d_probe  Distance
-         self.mp_lst   List containing all measurementpoints with signals
-         self.n_mp     Over all number of mps
-       Methods:
-         self.create_mp()     creates a measurement point
-         self.del_mp()        deletes a measurement point by number
-         self.plot_overview() plots an overview of all measurement points
-                              relative to source and probe
-         """
-
-    def __init__(self, name, d_mic, d_probe):
-        self.m_name = name
-        self.d_mic = d_mic
-        self.d_probe = d_probe
-        self.mp_lst = []
-        self.n_mp = 0
-        self.average = []
-
-    def create_mp(self, number, _signal, pos):
-        """Create measurement point object with specific number and _signal
-        object for mp Position pos [x,y]"""
-
-        self.mp_lst.append(MeasurementPoint(
-            number, (self.d_mic, self.d_probe), _signal, pos))
-        self.n_mp += 1
-
-    def del_mp(self, number):
-        """Delete measurement point object specified by number.
-           No reaction if not present."""
-
-        for i, el in enumerate(self.mp_lst):
-            if el.no == number:
-                del self.mp_lst[i]
-                # return 0
-
-    def plot_overview(self):
-        """Plots an overview of Source, Probe and Mics. All units in [m]"""
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        x = []
-        y = []
-        n = []
-        z = []
-        # bet = []
-        for el in self.mp_lst:
-            pos = el.pos
-            x.append(pos['x'])
-            y.append(pos['y'])
-            n.append(pos['no'])
-            z.append(self.d_mic)
-            # bet.append(str(el.beta_in_deg()))
-
-        ax.scatter(x, y, z)
-        ax.scatter(0, 0, self.d_probe)
-        ax.set_zlim(0, self.d_probe)
-        ax.set_xlabel('Plane Coord. [m]')
-        ax.set_ylabel('Plane Coord. [m]')
-        ax.set_zlabel('Distance Coord. [m]')
-
-        for i, n in enumerate(n):
-            ax.text(x[i], y[i], z[i], str(n))
-
-        ax.text(0, 0, self.d_probe, 'Source')
-        ax.text(0, 0, 0, 'Probe')
-
-        return fig, ax
-
-    def average_mp(self):
-        """
-        Averages all mps
-        If required make sure to apply Corrections on a mp level
-        Parameters
-        ----------
-        Requires full mp_lst
-
-        Returns
-        -------
-        Averaged tf
-        """
-        n_mp = len(self.mp_lst)
-        sum = np.zeros(len(self.mp_lst[0].tf.hf))
-
-        for el in self.mp_lst:
-            sum += el.tf.hf
-        average = sum / n_mp
-        self.average = TransferFunction(xf=self.mp_lst[0].tf.xf,
-                                        hf=average)
-
-
-class MeasurementPoint:
-    """Class for one measuremnet point,
-    it should be included in the 'Measurement'-class.
-       Norm suggests 3x3 measurement grid with distances .4 m,
-       numbered like a phone.
-
-       Attributes:
-           self.no         (init)        number of measurement point
-           self.x, self.y  (init as pos) position relative to probe normal through source
-           self.tf         (init)        transferfct object from mp (if multiple average before)
-           self.d_mic      (init)        distance between source and microphone
-           self.d_probe    (init)        distance between microphone and probe
-           self.beta       (__geo)       reflection angle
-           self.c_geo      (__c_geo)     correction coefficient for sound power
-                                         distribution
-
-        Public methods:
-        self.calc_c_geo()  Calculates self.c_geo, calls self.__c_geo and self.__geo
-        self.calc_c_dir()  Currently not implemented bc its assumed, that
-                           omnisource has no directivity
-    """
-
-    def __init__(self, number, distances, transfer_function, pos):
-        self.tf = transfer_function
-
-        self.distances = {'mic': distances[0],
-                          'probe': distances[1]}
-
-        self.corrections = {'c_geo': 1.,
-                            'c_dir': 1.,
-                            'c_gain': 1.,
-                            'applied': False}
-
-        self.pos = {'x': pos[0],
-                    'y': pos[1],
-                    'beta': 2*np.pi,
-                    'no': number}
-
-    def __geo_norm(self):
-        """Performs several geometrical calculations concerning the measurement position.
-           works with:
-               self.x, self.y, self.d_mic, self.d_probe
-           returns:
-               travel_to_r    traveled distance from source to reflection point
-               travel_from_r  traveled distance from reflection point to mic
-               alpha          angle between probe normal and source-mic line
-               beta           angle between probe normal and reflected soundray
-           sets:
-               self.beta      ang betw probe normal and reflected soundrray"""
-
-        x = self.pos['x']  # x-pos on grid
-        y = self.pos['y']  # y-pos on grid
-
-        d_mic = self.distances['mic']      # source - mic
-        d_probe = self.distances['probe']  # mic - probe
-
-        r_xy = np.sqrt(     x**2 + y**2)     # Distance in mic plane
-        r_xyz = np.sqrt(d_mic**2 + r_xy**2)  # Direct distance source -mic
-
-        # Traveled distance to and from reflection point
-        r_to_ref_xy = r_xy*(d_mic + d_probe)/(2*d_probe + d_mic)
-        travel_to_r = np.sqrt((d_mic + d_probe)**2 + r_to_ref_xy**2)
-        travel_from_r = np.sqrt(d_probe**2 + (r_xy - r_to_ref_xy)**2)
-
-        alpha = np.arctan(r_xy/d_mic)
-        self.pos['beta'] = np.arctan((d_mic + d_probe)/r_to_ref_xy)
-
-        return travel_to_r, travel_from_r, alpha, self.pos['beta'], r_xyz
-
-    def calc_c_geo(self, norm=True):
-        """Calculates c_geo, uses __geo_norm()"""
-
-        # Get geometry
-        travel_to_r, travel_from_r, _, _, r_xyz = self.__geo_norm()
-
-        # Set c_geo
-        if norm:
-            self.corrections['c_geo'] = ((travel_to_r + travel_from_r) / r_xyz)**2
-        else:
-            return travel_to_r + travel_from_r
-
-    def apply_c(self):
-        """Applys all correction values to the transfer fkt"""
-        # Are there already corrections set
-        mul = self.corrections['c_geo'] * \
-            self.corrections['c_dir'] * \
-            self.corrections['c_gain']
-
-        # If no corrections set, do it
-        if abs(mul-1) < .02:  # If corrections in .98-1.02
-            self.calc_c_geo()
-            self.calc_c_dir()
-
-        # If no corrections applied, do it
-        if not self.corrections['applied']:
-            self.tf.hf = np.copy(self.tf.hf) \
-                                 * self.corrections['c_geo'] \
-                                 * self.corrections['c_dir'] \
-                                 * self.corrections['c_gain']
-            self.corrections['applied'] = True
-            print('c_geo\t '  + str(round(self.corrections['c_geo'],  3))
-                  + ';\t c_dir\t '  + str(round(self.corrections['c_dir'],  3))
-                  + ';\t c_gain\t ' + str(round(self.corrections['c_gain'], 3)))
-
-    def calc_c_dir(self):  # , signal_direct, signal_ref):
-        """Currently not implemented - placeholder """
-        _ = self.pos['x']  # bc of code evaluation reasons
-        return 0
-
-    def beta_in_deg(self):
-        """Returns reflection angle beta in degree"""
-        return 180/np.pi*self.pos['beta']
 
 
 def rotate_sig_lst(sig_lst,
@@ -866,12 +538,6 @@ def create_band_lst(fact=1):
     return [list(i) for i in zip(*[f_low, f_up, f_centre])]
 
 
-def dbg_info(txt, verbose=False):
-    """Print debug info if global VERBOSE = True"""
-    if verbose:
-        print(str(datetime.now().time()) + ' - ' + txt)
-
-
 def pre_process_one_measurement(PATH, sig_name, F_up, u):
     """ Performs Time synchronous averaging on impulse domain of  singal list.
 
@@ -901,35 +567,3 @@ def pre_process_one_measurement(PATH, sig_name, F_up, u):
 
     avg_sig = Signal(signal_lst_imp=sig_imp_lst)
     return avg_sig
-
-
-if __name__ == "__main__":
-    TARGET_DIR = "C:/Users/gmeinwieserch/Desktop/FF_Reflektionen/Messung5/"
-    sig_3_name = 'm1-3.wav'
-
-    F_up = 500e3
-    par_sweep = (22.0, 1., 2.2e+04)
-
-    u = Signal(par_sweep=par_sweep, dt=1/F_up)
-
-    sig_345 = (Signal(path=TARGET_DIR, name=sig_3_name))
-
-    sig_345.resample(500e3)
-
-    sig_345_imp = (sig_345.impulse_response(u))
-
-    if True:
-        print('Generation of exitation:')
-        # %timeit for each
-        Signal(par_sweep=par_sweep, dt=1/F_up)
-
-        print('Load of wav file:')
-        Signal(path=TARGET_DIR, name=sig_3_name)
-
-        print('Resample:')
-        sig_345.resample(F_up)
-
-        print('Create Impulse:')
-        sig_345.impulse_response(u)
-
-        sig_345.plot_y_t()
