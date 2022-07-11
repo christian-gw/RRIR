@@ -1,17 +1,21 @@
 
 from datetime import datetime
 import matplotlib.pyplot as plt
-from scipy.fft import fft, ifft, fftfreq  # , fftshift
-from scipy.signal.windows import tukey, blackmanharris  # , hann
-import scipy.signal as sg
-import librosa as lr
+# from sml.Signal import Signal
+from sml.Transfer_function import TransferFunction
+# from scipy.fft import fft, ifft, fftfreq  # , fftshift
+# from scipy.signal.windows import tukey, blackmanharris  # , hann
+# import scipy.signal as sg
+# import librosa as lr
 import numpy as np
-import os
+# import os
+
 
 def dbg_info(txt, verbose=False):
     """Print debug info if global VERBOSE = True"""
     if verbose:
         print(str(datetime.now().time()) + ' - ' + txt)
+
 
 class Measurement:
     """Class for handling a whole measurement with multiple Measurement points
@@ -116,20 +120,20 @@ class MeasurementPoint:
        Norm suggests 3x3 measurement grid with distances .4 m,
        numbered like a phone.
 
-       Attributes:
-           self.no         (init)        number of measurement point
-           self.x, self.y  (init as pos) position relative to probe normal through source
-           self.tf         (init)        transferfct object from mp (if multiple average before)
-           self.d_mic      (init)        distance between source and microphone
-           self.d_probe    (init)        distance between microphone and probe
-           self.beta       (__geo)       reflection angle
-           self.c_geo      (__c_geo)     correction coefficient for sound power
+    Attributes:
+     self.no         (init)        number of measurement point
+     self.x, self.y  (init as pos) position rel to probe normal through source
+     self.tf         (init)        transffct obj from mp (if multiple avr)
+     self.d_mic      (init)        distance between source and microphone
+     self.d_probe    (init)        distance between microphone and probe
+     self.beta       (__geo)       reflection angle
+     self.c_geo      (__c_geo)     correction coefficient for sound power
                                          distribution
 
-        Public methods:
-        self.calc_c_geo()  Calculates self.c_geo, calls self.__c_geo and self.__geo
-        self.calc_c_dir()  Currently not implemented bc its assumed, that
-                           omnisource has no directivity
+    Public methods:
+     self.calc_c_geo()  Calcs self.c_geo, calls self.__c_geo and self.__geo
+     self.calc_c_dir()  Currently not implemented bc its assumed, that
+                       omnisource has no directivity
     """
 
     def __init__(self, number, distances, transfer_function, pos):
@@ -149,7 +153,7 @@ class MeasurementPoint:
                     'no': number}
 
     def __geo_norm(self):
-        """Performs several geometrical calculations concerning the measurement position.
+        """Performs geometrical calcs concerning the measurement pos.
            works with:
                self.x, self.y, self.d_mic, self.d_probe
            returns:
@@ -166,7 +170,7 @@ class MeasurementPoint:
         d_mic = self.distances['mic']      # source - mic
         d_probe = self.distances['probe']  # mic - probe
 
-        r_xy = np.sqrt(     x**2 + y**2)     # Distance in mic plane
+        r_xy = np.sqrt(x**2 + y**2)     # Distance in mic plane
         r_xyz = np.sqrt(d_mic**2 + r_xy**2)  # Direct distance source -mic
 
         # Traveled distance to and from reflection point
@@ -210,9 +214,12 @@ class MeasurementPoint:
                                  * self.corrections['c_dir'] \
                                  * self.corrections['c_gain']
             self.corrections['applied'] = True
-            print('c_geo\t '  + str(round(self.corrections['c_geo'],  3))
-                  + ';\t c_dir\t '  + str(round(self.corrections['c_dir'],  3))
-                  + ';\t c_gain\t ' + str(round(self.corrections['c_gain'], 3)))
+            print('c_geo\t '
+                  + str(round(self.corrections['c_geo'],  3))
+                  + ';\t c_dir\t '
+                  + str(round(self.corrections['c_dir'],  3))
+                  + ';\t c_gain\t '
+                  + str(round(self.corrections['c_gain'], 3)))
 
     def calc_c_dir(self):  # , signal_direct, signal_ref):
         """Currently not implemented - placeholder """

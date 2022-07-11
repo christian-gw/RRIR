@@ -11,7 +11,7 @@
 
 # %%codecell
 import numpy as np
-import Signal as sg
+import sml.Signal as sg
 from scipy import signal
 import matplotlib.pyplot as plt
 
@@ -179,15 +179,35 @@ class ambiSig:
 
         return [w, x, y, z]
 
-    def rotate_b_format(self,
-                        angle: np.array = np.zeros((3, 3))):
+    def _create_rot_matrix(self, phi, theta, rad=True):
+        """Creates rotation matrix around
+        phi - rotation angle angle around Z (up)
+        theta - rotation angle around Y (L of X)"""
+
+        if not rad:
+            phi, theta = np.radians((phi, theta))
+
+        cp = np.cos(phi)
+        ct = np.cos(theta)
+        sp = np.sin(phi)
+        st = np.sin(theta)
+
+        Rz = np.array([[ct, -st, 0],
+                       [st,  ct, 0],
+                       [00,   0, 1]])
+        Ry = np.array([[cp,  0, sp],
+                       [00,  1, 0],
+                       [-sp, 0, cp]])
+        return Ry*Rz
+
+    def _rotate_b_format(self,
+                        angle: np.array = np.eye(3)):
         """Rotate the B-Format to a new coordinate system
-        Gets self.a_format and rotates it with rotation matrix angle."""
+        Gets self.B_format and rotates it with rotation matrix angle."""
+        self.b_rot = angle*self.b_format
 
-        return 0
-
-    def extract_dir_signal(self,
-                           angle: np.array = np.zeros((3, 3))):
+    def _extract_dir_signal(self,
+                           angle: np.array = np.eye(3)):
         """Get B-Format and direction angle and find directive signal."""
 
         return 0

@@ -1,11 +1,13 @@
 from datetime import datetime
+from sml.Signal import appl_win, create_band_lst, Signal
 import matplotlib.pyplot as plt
-from scipy.fft import fft, ifft, fftfreq  # , fftshift
-from scipy.signal.windows import tukey, blackmanharris  # , hann
+from scipy.fft import ifft  # , fft,  fftfreq  # , fftshift
+# from scipy.signal.windows import tukey, blackmanharris  # , hann
 import scipy.signal as sg
-import librosa as lr
+# import librosa as lr
 import numpy as np
-import os
+# import os
+
 
 def dbg_info(txt, verbose=False):
     """Print debug info if global VERBOSE = True"""
@@ -127,4 +129,3 @@ class TransferFunction:
             x.append(f[2])
             y.append(abs(self.__get_band(*f[0:2])))
         return TransferFunction(xf=np.array(x), hf=np.array(y))
-
