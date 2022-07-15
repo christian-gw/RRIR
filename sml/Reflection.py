@@ -19,7 +19,7 @@ def dbg_info(txt, verbose=False):
 
 class Measurement:
     """Class for handling a whole measurement with multiple Measurement points
-         containing one signal each.
+       containing one signal each.
        If there are multiple signals (should be),
        averaging before creation of Measurement Point is advised.
        Attributes:
@@ -137,6 +137,7 @@ class MeasurementPoint:
     """
 
     def __init__(self, number, distances, transfer_function, pos):
+        """Init with good defaults or provided values."""
         self.tf = transfer_function
 
         self.distances = {'mic': distances[0],

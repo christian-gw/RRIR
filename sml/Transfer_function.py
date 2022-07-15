@@ -21,7 +21,7 @@ class TransferFunction:
         - 'incoming_sig' and 'reflected_sig' tf of those two signal obj
         - 'x' and 'hf' to create a tf obj from a external tf
         - 'signal', 'in_win' and 're_win' (both [start, duration]) tf
-          from two windowed sections of signal
+          from two windowed sections of signal (Adrienne windowing - Norm)
         Methods:
         - 'convolute_f':
             Returns a convolution of a signal and the tf with length of signal
@@ -51,7 +51,10 @@ class TransferFunction:
 
         elif 'xf' in kwargs and 'hf' in kwargs:
             self.xf = kwargs.get('xf', None)
+            
             self.hf = kwargs.get('hf', None)
+            if type(self.hf)==list:
+                self.hf = np.array(kwargs.get('hf', None)).mean(axis=0)
 
             self.n_tot = len(self.hf)
 
@@ -87,17 +90,20 @@ class TransferFunction:
             y = self.hf
             frange = [self.xf[0], self.xf[-1]]
             style = 'x'
-            print(str(self.xf))
-            print(str(self.hf))
+            # print(str(self.xf))
+            # print(str(self.hf))
         else:
             print('Invalid transfer fkt.')
 
         fig, ax = plt.subplots(1, figsize=(10, 3))
-        ax.plot(self.xf, y, marker=style, linewidth=.25)
         ax.set_xlabel('f [Hz]')
         ax.set_xlim(*frange)
+        ax.set_ylim(.1,1)
+
         ax.set_xscale('log')
         ax.set_yscale('log')
+        ax.plot(self.xf, y, marker=style, linewidth=1)
+        fig.tight_layout()
         return fig, ax
 
     # Fkt for convolution of transferfct with signal
@@ -120,7 +126,9 @@ class TransferFunction:
         return np.sqrt(l_sum / (i1-i0))
 
     def get_octave_band(self, fact=1.):
-        """Return new octave based tf."""
+        """Return new octave based tf.
+        fact=1. means full octave
+        fact 1/3 means 1/3rd octave"""
         x = []
         y = []
         oct_band_lst = create_band_lst(fact)

@@ -23,17 +23,18 @@ class Mic:
 
     def __basic_pattern_2d(self, phi):
         """Calculates the gain value at angle phi of Mic of given pattern."""
-        return self.alpha * (1 - self.alpha) * np.cos(phi)
+        return self.alpha + (1 - self.alpha) * np.cos(phi)
 
     def __basic_pattern_3d(self, phi, theta):
         """Calculates the gain value at angle phi of Mic of given pattern."""
-        return self.alpha*(1-self.alpha)*np.cos(theta)*np.cos(phi)
+        return self.alpha + (1-self.alpha)*np.sin(theta)*np.cos(phi)
 
     def plot_directivity_2d(self):
         """Plots directivity using self.__basic_pattern_2d."""
         abszissa = np.linspace(0, 2*np.pi, 360)
+
         plt.polar(abszissa,
-                  self.__basic_pattern_2d(abszissa))
+                  abs(self.__basic_pattern_2d(abszissa)))
 
     def plot_directivity_3d(self):
         """Plots directivity using self.__basic_pattern_2d."""
@@ -45,10 +46,10 @@ class Mic:
         theta = np.linspace(0, 2*np.pi, 360)
 
         P, T = np.meshgrid(phi, theta)
-        R = self.__basic_pattern_3d(P, T)
-        X = R*np.cos(T)
-        Y = R*np.sin(P)
-        Z = R*0
+        R = abs(self.__basic_pattern_3d(P, T))
+        X = R*np.sin(T)*np.cos(P)
+        Y = R*np.sin(T)*np.sin(P)
+        Z = R*np.cos(T)
 
         ax.plot_surface(X, Y, Z)
 
@@ -114,7 +115,7 @@ class AmbiMic:
                                 den)
 
     def _calc_hxyz_cor_Gerzon(self):
-        """Generates the filter for W-Component correction
+        """Generates the filter for xyz-Component correction
         according to Gerzon_1975. The formula was used from:
         http://pcfarina.eng.unipr.it/Public/B-format/A2B-conversion/A2B.htm"""
 
@@ -201,13 +202,13 @@ class ambiSig:
         return Ry*Rz
 
     def _rotate_b_format(self,
-                        angle: np.array = np.eye(3)):
+                         angle: np.array = np.eye(3)):
         """Rotate the B-Format to a new coordinate system
         Gets self.B_format and rotates it with rotation matrix angle."""
-        self.b_rot = angle*self.b_format
+        self.b_rot = angle*self.b_format[1:]
 
     def _extract_dir_signal(self,
-                           angle: np.array = np.eye(3)):
+                            angle: np.array = np.eye(3)):
         """Get B-Format and direction angle and find directive signal."""
 
         return 0
@@ -247,5 +248,10 @@ if __name__ == "__main__":
     aSig = ambiSig(sigs_raw, am)
     print(aSig.b_format)
 
+    # m = Mic(0)
+    # # from IPython import get_ipython
+    # # get_ipython().run_line_magic('matplotlib', 'qt')
+    # # get_ipython().run_line_magic('matplotlib', 'inline')
 
-# %%
+    # m.plot_directivity_2d()
+    # am = AmbiMic(1.47, .5)
