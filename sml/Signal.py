@@ -122,6 +122,14 @@ class Signal:
         Signal.sig_nr += 1
         Signal.entity.append(self)
 
+    def __mul__(self, factor):
+        """Operator overload to multiply y-array of signal by factor."""
+        self.y = self.y*factor
+        self.__fft_all()
+        return self
+
+    __rmul__ = __mul__
+
     def __load_data(self, path):
         """Load Data from file:
             .wav --> Load only answer and calculate metainformation,
@@ -334,7 +342,7 @@ class Signal:
         L = [10*np.log10(el/((2e-5)**2)*T) for el in x_filt]
         self.L_t = L
 
-    def write_wav(self, name, F_samp=48e3):
+    def write_wav(self, name, F_samp=48e3, norm=True):
         """
         Writes y value of signal to wave file after sampling to Samplingrate.
         Parameters
@@ -345,7 +353,9 @@ class Signal:
         y = Signal(y=np.copy(np.trim_zeros(self.y)), dt=self.dt)
         y.resample(F_samp)
         np.trim_zeros(y.y)
-        # lr.output.write_wav(name, np.float32(y.y), int(F_samp))
+        if norm:
+            y.y = y.y/max(y.y)
+        # lr.output.write_wav(name, np.float32(y.y), int(F_samp), norm)
         wavfile.write(name, int(F_samp), np.float32(y.y))
 
     def correct_refl_component(self, direct, t_start, t_dur):

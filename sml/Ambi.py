@@ -1,19 +1,29 @@
 # %%[markdown]
 # # Ambisonics
-#
+# Class module to handle Ambisonics Signals
+# Classes:
+#  - Mic - Microphone, Microphone sensetivity
+#  - AmbiMic - Ambisonics Mic, Sensitivity, Corection Matrix
+#  - ambiSig - A-Format, B-Format, Directive Signal, rotation
 # # Source
 #
 # 2018_Schulze-Forster_The B-Format – ...
 # Recording, Auralization and Absorbtion Measurements.pdf
-# --> # TODO: Use Primary Sources instead
+#
 #
 # asdf
 
 # %%codecell
-import numpy as np
-import sml.Signal as sg
-from scipy import signal
-import matplotlib.pyplot as plt
+if __name__ == "__main__":
+    import numpy as np
+    import Signal as sg
+    from scipy import signal
+    import matplotlib.pyplot as plt
+else:
+    import numpy as np
+    import sml.Signal as sg
+    from scipy import signal
+    import matplotlib.pyplot as plt
 
 
 # %%codecell
@@ -199,25 +209,38 @@ class ambiSig:
         Ry = np.array([[cp,  0, sp],
                        [00,  1, 0],
                        [-sp, 0, cp]])
-        return Ry*Rz
+        return np.dot(Rz, Ry)
 
     def _rotate_b_format(self,
                          angle: np.array = np.eye(3)):
         """Rotate the B-Format to a new coordinate system
         Gets self.B_format and rotates it with rotation matrix angle."""
-        self.b_rot = angle*self.b_format[1:]
+        self.b_rot = np.dot(angle, self.b_format[1:])
 
     def _extract_dir_signal(self,
                             angle: np.array = np.eye(3)):
         """Get B-Format and direction angle and find directive signal."""
 
-        return 0
+        # First Sketch: Linearcombination of xyz:
+        direction = np.dot(angle, np.array([1., 0., 0.]))
+        # print(direction)
+        # print(self.b_format[1:])
+        weighted = 1/3*direction * self.b_format[1:]
+        # print(weighted)
+        return sg.Signal(signal_lst_imp=weighted)
 
     def safe_b_format(self, names: dict):
         """Safes the b_format as 4 files in the local directory.
         Filenames are specified in dictionary name."""
         for key in names:
             self.b_format[key-1].write_wav(names[key])
+
+    def get_one_direction(self, phi, theta, rad=True):
+        """Setts up the necesarry rotation matrix
+        and extracts a signal like a fig8 mic pointet in that direction"""
+
+        rot_mat = self._create_rot_matrix(phi, theta, rad=rad)
+        return self._extract_dir_signal(rot_mat)
 
 
 def test(i):
@@ -246,12 +269,9 @@ if __name__ == "__main__":
 
     # Initialisation of Ambisonics Signal
     aSig = ambiSig(sigs_raw, am)
-    print(aSig.b_format)
-
-    # m = Mic(0)
-    # # from IPython import get_ipython
-    # # get_ipython().run_line_magic('matplotlib', 'qt')
-    # # get_ipython().run_line_magic('matplotlib', 'inline')
-
-    # m.plot_directivity_2d()
-    # am = AmbiMic(1.47, .5)
+    # print(aSig.b_format)
+    od_sig = aSig.get_one_direction(30, 30, rad=False)
+    print(od_sig)
+    od_sig.write_wav('test.wav')
+    od_sig.plot_y_t()
+# %%
