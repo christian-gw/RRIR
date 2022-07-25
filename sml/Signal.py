@@ -11,44 +11,88 @@ from scipy.io import wavfile
 
 
 def dbg_info(txt, verbose=False):
-    """Print debug info if global VERBOSE = True"""
+    """Print debug info if global VERBOSE = True
+
+    Parameters
+    ----------
+    txt: str
+        Text to print in debug
+    verbose : Bool
+        Print takes place when True
+    Returns
+    -------
+    None"""
+
     if verbose:
         print(str(datetime.now().time()) + ' - ' + txt)
 
 
 # Signal class
 class Signal:
-    """Signal Class
-        Initialisation depends on used kwargs:
-        - 'path' and 'name' of wav file to load
+    """The Signal class holds and processes a time-signal.
+
+    Its intended for sound signals derived from sweep measurements.
+    It can be used to analyse RIRs, Room and Wall TF, directivity analysis ...
+    Its initialisation depends on the used kwargs
+
+    Parameters
+    ----------
+    **kwargs: dict
+        path: str
+        name: str
+        sweep_par: Tuple
+            Needs dt kwarg.
+            (start_freq: float,
+            sweep_dur: float,
+            end_freq: float)
+        dt: float
+            Timebase of the signal
+            Needs sweep_par or y kwarg.
+        signal_lst_imp: list of Signal
+            List of Signal to average
+            Time alignment should be done externally
+        y: np.array
+            Needs dt kwarg
+            1-D Array holding the time signal
+            - 'path' and 'name' of wav file to load
             path : string - path to the file
             name : string - name of the file
-        - 'sweep_par' and 'dt' to create sweep
-            sweep_par : tuple of form (start_freq, sweep_dur, end_freq)
-            dt : float - time base of the signal (1/fs)
-        - 'signal_lst_imp' to average several time aligned impulses
-            signal_lst_imp : array - Array of form [Signal, Signal, ...]
-        - 'y' and 'dt' for naive input of y signal
-            y : array - np.array with Soundpressurelevels (e.g. from wav)
-            dt : float - timebase of the signal (1/fs)
 
-        Methods:
-        - 'impulse_response':
-            Calc and return impulse response from measured sweep and exitation
-        - 'filter_y': filter signal and return filtered signal
-        - 'resample': Resample signal and return resampled (no antialiasing)
-        - 'cut_signal':
-            Cut signal between specified times and return new signal
-        - 'plot_y_t' 'plot_y_f:' Plot time or frequency signal
-        - 'plot_spec_transform':
-            Plot spectrogram of transformation like in method impulse_response
-        -
-        Attributes:
-        - bool: exitation,
-        - double:      dt,   T,
-        - integer:  n_tot,
-        - array-axis:   t,  xf,
-        - array-signal: y,"""
+    Methods
+    -------
+    impulse_response() -> Signal
+        Calc and return impulse response from measured sweep and exitation
+    filter_y() -> Signal
+        filter signal and return filtered signal
+    resample() -> Signal
+        Resample signal and return resampled (no antialiasing)
+    cut_signal() -> Signal
+        Cut signal between specified times and return new signal
+    plot_y_t() -> plt.fig, plt.ax
+        Plot time signal
+    plot_y_f() -> plt.fig, plt.ax
+        Plot frequency signal
+    plot_spec_transform() -> plt.fig, plt.ax
+        Plot spectrogram of transformation like in method impulse_response
+
+    Attributes
+    ----------
+    exitation: Bool
+        Specifies wether the signal is a exitation
+    dt: Float
+        Timebase
+    T: Float
+        Total time
+    n_tot: Int
+        Number of samples
+    y: np.array
+        Time signal
+    axis_array: dict
+        t: np.array
+            Time axis
+        xf: np.array
+            Frequency axis
+"""
 
     sig_nr = 0
     entity = []
@@ -124,7 +168,8 @@ class Signal:
         Signal.entity.append(self)
 
     def __del__(self):
-        del self.y
+        """Operator overload to make sure all np.arrays are deleted"""
+        del self.y, self.axis_arrays['t'], self.axis_arrays['xf']
         gc.collect()
 
     def __mul__(self, factor):
@@ -136,10 +181,27 @@ class Signal:
     __rmul__ = __mul__
 
     def __load_data(self, path):
-        """Load Data from file:
-            .wav --> Load only answer and calculate metainformation,
-            the exitation must be set mannually.
-            dt, T, n_tot, t, xf, y =load_data(path)"""
+        """Load Data from wav and calculate meta information.
+
+        Parameters
+        ----------
+        path: str
+            Path where the source wav file is located.
+
+        Returns
+        -------
+        dt: float
+            Timebase
+        T: float
+            Total time
+        n_tot: int
+            Number of samples
+        t: np.array
+            Time axis
+        xf: np.array
+            Time axis
+        y: np.array
+            Time based data"""
 
         raw = lr.load(path, sr=None)  # (fs,[Data])
 
@@ -158,9 +220,32 @@ class Signal:
         return dt, T, n_tot, t, xf, y
 
     def __gen_sweep(self, _par_sweep, dt):
-        """Generate sweep signal from parmeters:
-              par_sweep = [f_start, time, f_end]
-              time base"""
+        """Generate sweep signal from parmeters.
+
+        Parameters
+        ----------
+        _par_sweep: tuple
+            _par_sweep[0]: float
+                Start Frequency of the sweep
+            _par_sweep[1]: float
+                Time duration of the sweep
+            _par_sweep[2]: float
+                End frequency of the sweep
+        dt: float
+            Timebase of the sweep
+
+        Returns
+        -------
+        T: float
+            Total time
+        n_tot: int
+            Number of samples
+        t: np.array
+            Time axis
+        xf: np.array
+            Time axis
+        y: np.array
+            Time based data"""
 
         T = _par_sweep[1]
         n_tot = int(T/dt)
@@ -173,15 +258,24 @@ class Signal:
         return T, n_tot, t, xf, y
 
     def __inv_u(self, x):
-        """ x = Signal to invert --> Exitation E-Sweep u
-        params = [low-frequency, high-frequency]
+        """Invert Signal according to Farina.
+
         Get inverse of e-sweep by reverse x and get amplitude right, so that
           its rising with 3 dB/Oct
         according to:
         Farina 2007 p4 and
         Meng; Sen; Wang; Hayes - Impulse response measurement with sine sweeps
           and amplitude modulation shemes Signal Processing and Communication
-          systems 2008 - ICSPCS"""
+          systems 2008 - ICSPCS
+        Parameters
+        ----------
+        x: Signal
+            Signal to invert
+
+        Returns
+        -------
+        i: Signal
+            Inverted Signal"""
 
         om1 = x.par_sweep[0]*2*np.pi            # f0 --> omega0
         om2 = x.par_sweep[2]*2*np.pi            # f1 --> omega1
@@ -190,7 +284,7 @@ class Signal:
         # Creation Frequency modulation (exp rising magnitude)
         # For modulation, K and L see paper from Docstring
         L = T/np.log(om1/om2)
-#                       K             / L
+        #               K             / L
         KpL = (om1*T/np.log(om1/om2)) / L
 
         time = np.linspace(0, T, len(x.y))
@@ -212,14 +306,23 @@ class Signal:
 
     def __fft_all(self):
         """Calculate a fft on all present signals"""
+
         if self.y is not None:
             self.y_f = fft(self.y)
 
     # Create new Signal
     def impulse_response(self, exitation):
+        """Convolute exitation signal out of a response signal
 
-        """Create new signal from measured signal containing impulse response
-        created by deconvolution of 'exitation' signal"""
+        Parameters
+        ----------
+        exitation: Signal
+            Exitation Signal
+
+        Returns
+        -------
+        Response: Signal"""
+
         i_u = self.__inv_u(exitation)
         imp = sg.convolve(self.y, i_u,    # convolution of signal with inverse
                           mode='same')
@@ -227,7 +330,18 @@ class Signal:
         return Signal(y=imp, dt=self.dt)
 
     def filter_y(self, frange=(65.0, 22000.0)):
-        """Filter Signal of range 'frange' of type list."""
+        """Filter Signal of range 'frange' of type list.
+
+        Parameters
+        ----------
+        frange: (Float, Float)
+            Frequency range to keep while the rest is filtered.
+
+        Returns
+        -------
+        Filtered Signal: Signal
+            Signalcomponent in frange"""
+
         sos = sg.butter(10, frange, btype='bp',
                         analog=False, output='sos', fs=1/self.dt)
 
@@ -236,7 +350,18 @@ class Signal:
         return Signal(y=filt, dt=self.dt)
 
     def resample(self, Fs_new):
-        """Resample the singal to the new sampling rate"""
+        """Resample the singal to the new sampling rate
+
+        Parameters
+        ----------
+        Fs_new: float
+            Targeted new Samplingrate
+
+        Returns
+        -------
+        Signal: Signal
+            Resampled Signal"""
+
         factor = Fs_new * self.dt
         n_new = int(self.n_tot * factor)
 
@@ -245,8 +370,7 @@ class Signal:
         return Signal(y=y, dt=1/Fs_new)
 
     def cut_signal(self, t_start, t_end, force_n=None):
-        """
-        Cuts Signal to a new signal between times
+        """Cuts Signal to a new signal between times
 
         Parameters
         ----------
@@ -256,7 +380,7 @@ class Signal:
 
         Returns
         -------
-        cutted signal
+        cutted signal: Signal
         """
 
         n_start = int(t_start/self.dt)
@@ -271,7 +395,20 @@ class Signal:
 
     # Plotting
     def plot_y_t(self, headline=''):
-        """Plot time signal."""
+        """Plot time signal.
+
+        Parameters
+        ----------
+        headline: str
+            Headline to insert
+
+        Returns
+        -------
+        fig: plt.figure
+            Figure to configurate
+        ax: plt.axis
+            Axis to configurate (Holing lines)"""
+
         fig, ax = plt.subplots(1, figsize=(10, 6))
         ax.plot(self.axis_arrays['t'], self.y, linewidth=1)
         ax.set_xlabel('Time [s]')
@@ -281,7 +418,20 @@ class Signal:
         return fig, ax
 
     def plot_y_f(self, headline=''):
-        """Plot the magnitude spectrum of the signal."""
+        """Plot the magnitude spectrum of the signal..
+
+        Parameters
+        ----------
+        headline: str
+            Headline to insert
+
+        Returns
+        -------
+        fig: plt.figure
+            Figure to configurate
+        ax: plt.axis
+            Axis to configurate (Holing lines)"""
+
         fig, ax = plt.subplots(1, figsize=(10, 6))
         ax.plot(self.axis_arrays['xf'], 2.0/self.n_tot *
                 np.abs(self.y_f[0:self.n_tot//2]), linewidth=.25)
@@ -293,7 +443,19 @@ class Signal:
         return fig, ax
 
     def plot_spec(self, n_win=2048):
-        """ Create figure with spectrogram plot to visualise the sweep."""
+        """ Create figure with spectrogram plot to visualise the sweep..
+
+        Parameters
+        ----------
+        n_win: Int
+            Window size for Spectrogram
+
+        Returns
+        -------
+        fig: plt.figure
+            Figure to configurate
+        ax: plt.axis
+            Axis to configurate (Holing lines)"""
 
         # Preset and debug
         f_range = [50, 1/(3*self.dt)]
@@ -325,8 +487,19 @@ class Signal:
         return fig, ax
 
     def level_time(self, T=.035):
-        """ Calculates the sound level with a smoothing window of length T
-            Returns Level array according to DIN EN 61672-1"""
+        """ Calculates the sound level with a smoothing window of length T.
+
+        Calculates the sound level with a smoothing
+        window of length T according to DIN EN 61672-1
+        Norm-Name   T
+        'Impulse'   0.035
+        'Fast'      0.125
+        'Slow'      1.000
+
+        Parameters
+        ----------
+        T: float
+            Length of the Smoothing level"""
 
         # Square signal
         x = self.y
@@ -348,13 +521,19 @@ class Signal:
         self.L_t = L
 
     def write_wav(self, name, F_samp=48e3, norm=True):
-        """
-        Writes y value of signal to wave file after sampling to Samplingrate.
+        """Writes Signal to wav file.
+
+        It writes Signal.y Sampled to F_samp and applies Normation.
+
         Parameters
         ----------
-        F_samp : Samplingrate
-        name : name of file
-        """
+        name: str
+            name of file
+        F_samp : float
+            Samplingrate
+        norm: bool
+            Wether it should be normed to make max(y) == 1"""
+
         y = Signal(y=np.copy(np.trim_zeros(self.y)), dt=self.dt)
         y.resample(F_samp)
         np.trim_zeros(y.y)
@@ -364,22 +543,27 @@ class Signal:
         wavfile.write(name, int(F_samp), np.float32(y.y))
 
     def correct_refl_component(self, direct, t_start, t_dur):
-        """
-        Subtracts section of a cor_sig (direct Signal) Signal
+        """Corrects direct sound out of a reflection sound.
+
+        Subtracts section of a direct (direct Signal) Signal
         after searching for the pos with greatest overlap.
 
         Parameters
         ----------
-        cor_sig : Signal containing correction
-          (e.g. direct sound and or ground reflection)
-        t_start : start of the direct sound
-        t_dur : duration of the direct sound
+        direct: Signal
+             Signal containing correction
+             (e.g. direct sound and or ground reflection)
+        t_start:
+            Start of the direct sound [s]
+        t_dur:
+            Duration of the direct sound [s]
 
-        Changes:
+        Returns
         -------
-        int
-            Signal to corrected Signal
-        """
+        direct_sync: (fig: plt.Figure, ax: plt.ax)
+        correctet_sig: Signal
+            Corrected Signal without direct sound."""
+
         direct, _ = appl_win(direct, t_start, t_dur)
         corell = sg.correlate(direct.y, self.y)
 
@@ -399,7 +583,8 @@ def rotate_sig_lst(sig_lst,
                    start_cor_reference=0,
                    start_cor_reflection=0,
                    fix_shift=0):
-    """
+    """Synchronise multiple Signals.
+
     Rotate a signal list so all impulses are sync and at start of file.
     Number of rotation samples is determined by correlation between
     the most highest and second highest peak +-MARGIN samples by default.
@@ -410,17 +595,22 @@ def rotate_sig_lst(sig_lst,
 
     Parameters
     ----------
-    sig_lst : List of signal objects to rotate
-    cor_range_pre : float, optional - time [s] over wich to correlate
+    sig_lst :
+        List of signal objects to rotate
+    cor_range_pre : float
+        Time [s] over wich to correlate
         The default is 0. If not set otherwise
         If set otherwise it changes size of correlation window
-    start_cor_reference : float, optional - time [s] to start corr on ref-sig
+    start_cor_reference : float
+        Time [s] to start corr on ref-sig
         The default is 0. That means Corr range is determined by max search
         If set otherwise given start of cor range is used.
-    start_cor_reflection : float, optional - time to start corr on shift sig
+    start_cor_reflection : float
+        Time to start corr on shift sig
         The default is 0. That means Corr range is determidned by max search
         If set otherwise given start is used
-    fix_shift: float, optional - time to shift all signals to the right
+    fix_shift: float
+        Time to shift all signals to the right
         The default is 0. No shift is applied.
         Use if you want to avoid a impulse beeing split in parts by file end.
 
@@ -484,8 +674,20 @@ def rotate_sig_lst(sig_lst,
 
 
 def to_db(x):
-    """Calculates the value of xa as an array or an scalar:\n
-    Formula: L = 20*log10(p/p0)"""
+    """Calculates dB value.
+
+    Definition of dB like in general acoustics.
+    Reference value is 2e-5 Pa.
+    Its no calibrated value, because the loaded wav is not calibrated.
+    Formula: L = 20*log10(p/p0)
+
+    Parameters
+    ----------
+    x: float or np.array(float)
+
+    Returns
+    -------
+    Lp: float or np.array(float)"""
 
     p0 = 2e-5                     # Reference
     xa = np.asarray(x)            # Cast to array so its polymorph
@@ -495,10 +697,28 @@ def to_db(x):
 
 # TODO: Why is this no method of Sigal class?
 def appl_win(sig, t_start, t_len, form='norm'):
-    """Define and apply a Window of form
+    """Define and apply a window to a signal.
+    Positions are set by t_start, t_len
+    Possible forms are:
         sym = tuckey with \alpha = .03 or
         Norm = norm window)
-    on pos t_start with length t_len"""
+
+    Parameters
+    ----------
+    sig: Signal
+        Signal to apply window to
+    t_start: float
+        Where to start
+    t_len: float
+        How long the window should be
+    form: str
+        Form of the window
+
+    Returns
+    -------
+    Signal: Signal
+        Windowed Signal
+    """
 
     if form == 'sym':
         sta = int(t_start/sig.dt)
@@ -542,7 +762,22 @@ def appl_win(sig, t_start, t_len, form='norm'):
 
 
 def create_band_lst(fact=1):
-    """Returns list of bands for octave or deca spectrum generation"""
+    """Returns list of bands for octave or deca spectrum generation
+
+    Fractional octave list e.g. for usage with Signal.filter_y(frange).
+
+    Parameters
+    ----------
+    fact: float
+        Fraction of octave 1 --> Octave, 1/3 --> Terz
+    Returns
+    -------
+    band_list: list
+        list: tuple
+            tuple: (float,float,float)
+                f_low
+                f_up
+                f_centre"""
 
     f_centre = [round(10**3 * 2**(exp*fact)) for exp in range(round(-6/fact), round((5-1)/fact)+1)]
 
@@ -558,16 +793,20 @@ def pre_process_one_measurement(PATH, sig_name, F_up, u):
 
     Parameters
     ----------
-    PATH : Path to the wave Files to work.
-    sig_name : List of filenames
-    F_up : Frequency to upsample to.
-    u : Signal object of exitation signal.
+    PATH: str
+        Path to the wave Files to work.
+    sig_name: list(str)
+        List of filenames
+    F_up: float
+        Frequency to upsample to.
+    u: Signal
+        Signal object of exitation signal.
 
     Returns
     -------
-    avg_sig : Signal object of the time synchron averaged signals.
+    avg_sig: list(Signal)
+        Signal object of the time synchron averaged signals."""
 
-    """
     sig_raw_lst = []
     sig_imp_lst = []
 

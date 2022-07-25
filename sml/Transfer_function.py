@@ -12,32 +12,101 @@ if __name__ == "__main__":
 else:
     from sml.Signal import appl_win, create_band_lst, Signal
 
+
 def dbg_info(txt, verbose=False):
-    """Print debug info if global VERBOSE = True"""
+    """Print debug info if global VERBOSE = True
+
+    Parameters
+    ----------
+    txt: str
+        Text to print in debug
+    verbose : Bool
+        Print takes place when True
+    Returns
+    -------
+    None"""
+
     if verbose:
         print(str(datetime.now().time()) + ' - ' + txt)
 
 
 class TransferFunction:
-    """Transfer Fkt Class
-        Initialisation depends on used kwargs:
-        - 'incoming_sig' and 'reflected_sig' tf of those two signal obj
-        - 'x' and 'hf' to create a tf obj from a external tf
-        - 'signal', 'in_win' and 're_win' (both [start, duration]) tf
+    """The TransferFunction Class holds and processes a transfer function.
+
+    Its intended for sound signals derived from sweep measurements.
+    It can be used to analyse RIRs, Room and Wall TF, directivity analysis ...
+    Its initialisation depends on the used kwargs
+
+    Parameters
+    ----------
+    **kwargs: dict
+        incoming_sig: Signal
+            Transferfunction betw. incoming_sig and reflected_sig as measured.
+            Also needs reflected_sig
+        reflected_sig: Signal
+            Transferfunction betw. incoming_sig and reflected_sig as measured.
+            Also needs incomming_sig
+        x: np.array(float)
+            x-axis of TF
+            Also needs hf
+        'hf: np.array(float)
+            Externally calculated tf
+            Also needs x
+        signal: Signal
+            Signal with incomming and outcomming component
+            Also needs in_win and re_win
+            Uses Adrienne Windowing see Norm # TODO: Norm
+         in_win: touple(float, float)
+            Time window for incomming
+            Also needs signal and re_win
+            start: float
+                Startvalue in [s]
+            duration: float
+                Duration in [s]
+         re_win: touple(float, float)
+            Time window for incomming
+            Also needs signal and in_win
+            start: float
+                Startvalue in [s]
+            duration: float
+                Duration in [s]
+
           from two windowed sections of signal (Adrienne windowing - Norm)
-        Methods:
-        - 'convolute_f':
+
+        Methods
+        -------
+        convolute_f() -> Signal
             Returns a convolution of a signal and the tf with length of signal
-        - '__get_band': Returns RMS value within a specified band
-        - 'get_octave_band': Returns tf in octave bands
-        - 'plot_ht', 'plot_hf' and 'plot_oct':
+        __get_band() -> float
+            Returns RMS value within a specified band
+        get_octave_band() -> TransferFunction
+            Returns tf in octave bands
+        plot_ht() -> fig, ax
+            Plot Time signal
+        plot_hf() -> fig, ax
+            Plot Spectrum
+        plot_oct() -> fig, ax:
             Plot time or frequency representation of tf
-        Attributes:
-        - bool: exitation,
-        - double:      dt,   T, frange
-        - integer:  n_tot,
-        - array-axis:   t,  xf,
-        - array-signal: hf, ht"""
+
+        Attributes
+        ----------
+        exitation: Bool
+            Specifies wether the signal is a exitation
+        dt: Float
+            Timebase
+        frange: tuple(float)
+            Total time
+        n_tot: Int
+            Number of samples
+        ht: np.array(float)
+            Time signal
+        hf: np.array(float)
+            Frequency signal
+        axis_array: dict
+            t: np.array
+                Time axis
+            xf: np.array
+                Frequency axis"""
 
     def __init__(self, **kwargs):
         if 'incoming_sig' in kwargs and 'reflected_sig' in kwargs:
@@ -56,7 +125,7 @@ class TransferFunction:
             self.xf = kwargs.get('xf', None)
 
             self.hf = kwargs.get('hf', None)
-            if type(self.hf)==list:
+            if type(self.hf) == list:
                 self.hf = np.array(kwargs.get('hf', None)).mean(axis=0)
 
             self.n_tot = len(self.hf)
@@ -84,11 +153,19 @@ class TransferFunction:
             print('No valid keywords provided. - See docstring.')
 
     def plot_hf(self):
-        """Plots spectrum of tf before and after .get_octave_band"""
+        """Plots spectrum of tf before and after .get_octave_band
+
+        Returns
+        -------
+        fig: plt.Figure
+        ax: plt.Axis"""
+
+        # For Octaves etc.
         if self.n_tot > 128:
             y = 2.0/self.n_tot * np.abs(self.hf[0:self.n_tot//2])
             frange = self.frange
             style = None
+        # For Spectra
         elif self.n_tot <= 128:
             y = self.hf
             frange = [self.xf[0], self.xf[-1]]
@@ -101,7 +178,7 @@ class TransferFunction:
         fig, ax = plt.subplots(1, figsize=(10, 3))
         ax.set_xlabel('f [Hz]')
         ax.set_xlim(*frange)
-        ax.set_ylim(.1,1)
+        ax.set_ylim(.1, 1)
 
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -111,8 +188,21 @@ class TransferFunction:
 
     # Fkt for convolution of transferfct with signal
     def convolute_f(self, sig):
-        """Convolutes two signals in freq domain (multiplication),
-        after resample.)"""
+        """Convolutes tf with sig.
+
+        Convolution takes place by multiplication in frequency domain.
+        Sampling rate is taken from sig
+        Formula: convolution = F(self)*F(sig)
+
+        Parameters
+        ----------
+        sig: Signal
+            Signal which should be convolved with TransferFunction
+
+        Returns
+        -------
+        Signal: Signal
+            Convolved Signal"""
 
         h_samp = sg.resample(self.hf, len(sig.y_f))
         conv_f = h_samp*sig.y_f
@@ -120,6 +210,20 @@ class TransferFunction:
 
     # Fkt to generate octave based signal
     def __get_band(self, f0, f1):
+        """Extracts band rms by cutting out of spectrum
+
+        Parameters
+        ----------
+        f0: Float
+            Startfrequency [Hz]
+        f1: float
+            Endfrequency [Hz]
+
+        Returns
+        -------
+        rms: float
+            Calculated rms"""
+
         i0 = np.where(self.xf > f0-self.xf[0])[0][0]
         i1 = np.where(self.xf > f1-self.xf[0])[0][0]
 
@@ -130,8 +234,19 @@ class TransferFunction:
 
     def get_octave_band(self, fact=1.):
         """Return new octave based tf.
-        fact=1. means full octave
-        fact 1/3 means 1/3rd octave"""
+
+        Parameters
+        ----------
+        fact: float
+            Factor to divide up a octave
+            fact = 1. means full octave
+            fact = 1/3 means 1/3rd octave
+
+        Returns
+        -------
+        TransferFunction: Transferfunction
+            TF in bands"""
+
         x = []
         y = []
         oct_band_lst = create_band_lst(fact)

@@ -25,7 +25,7 @@ import numpy as np
 import scipy.signal as sig
 import matplotlib.pyplot as plt
 from numpy.fft import fft, ifft, fftfreq
-from scipy.io import wavfile
+# from scipy.io import wavfile
 from scipy.signal.windows import tukey
 import librosa as lr
 
@@ -93,6 +93,7 @@ def load_lr(path):
     """Load data with librosa"""
     raw = lr.load(path, sr=96000)
     return raw[0], len(raw[0])
+
 
 # Sweep Parameters
 f1 = 50

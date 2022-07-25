@@ -1,4 +1,3 @@
-
 from datetime import datetime
 import matplotlib.pyplot as plt
 
@@ -18,7 +17,18 @@ else:
 
 
 def dbg_info(txt, verbose=False):
-    """Print debug info if global VERBOSE = True"""
+    """Print debug info if global VERBOSE = True
+
+    Parameters
+    ----------
+    txt: str
+        Text to print in debug
+    verbose : Bool
+        Print takes place when True
+    Returns
+    -------
+    None"""
+
     if verbose:
         print(str(datetime.now().time()) + ' - ' + txt)
 
