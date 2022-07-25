@@ -4,6 +4,7 @@ Created on Thu Oct 14 17:08:55 2021
 
 @author: gmeinwieserch
 Helper functions for evaluation of RIRs from Wave files
+Redundant to the split up modules.
 """
 
 from datetime import datetime

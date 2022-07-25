@@ -1,7 +1,8 @@
 # %%markdown
 # # Cut Signals for each Measurement
 # ## Abstract
-# - The measurent is performed with a e-sweep and needs to be transformed into Impulse
+# - The measurent is performed with a e-sweep
+# - It needs to be transformed into Impulse
 # - This is performed for everything
 #
 # ## Doing
@@ -14,7 +15,10 @@
 
 # %%codecell
 # 1. Import, Base Settings (System) and Base Settings (User)
-from reflection_definitions import Signal, rotate_sig_lst
+# from reflection_definitions import Signal, rotate_sig_lst
+from sml.Signal import Signal
+from sml.Signal import rotate_sig_lst
+
 from os import mkdir, path
 import matplotlib.pyplot as plt
 
@@ -29,7 +33,7 @@ F_up = 500e3
 # ######## Please specify where the Files are ##############
 ############################################################
 
-TARGET_DIR = 'C:/Users/gmeinwieserch/Documents/Python/Reflection/Work_Dir/'
+TARGET_DIR = 'C:/Users/gmeinwieserch/Documents/Python/Reflection/Work_Dir_Reflection/'
 
 
 NAME = 'REC0%s.wav'
@@ -67,17 +71,21 @@ for position in NR.keys():
 
     # Create Impulse
     impulse = signal.impulse_response(u_sig)
-    del signal.y, signal.y_f, signal.axis_arrays['t'], signal.axis_arrays['xf'], signal
+    del signal.y, signal.y_f, signal.axis_arrays['t']
+    del signal.axis_arrays['xf'], signal
+
     # Save Impulse
     impulse.plot_y_t()
     plt.show()
     impulse.write_wav(name=IMP_DIR + '/IMP_' + NAME % (NR[position][0]))
-    del impulse.y, impulse.y_f, impulse.axis_arrays['t'], impulse.axis_arrays['xf'], impulse
+    del impulse.y, impulse.y_f, impulse.axis_arrays['t']
+    del impulse.axis_arrays['xf'], impulse
 
 # %%markdown
 # # Average the Multimeasurements for Reflection
 # ## Abstract
-# - The Measuremnts for reflection where performed 3 at a time. Its necesarry to cut them up.
+# - The Measuremnts for reflection where performed 3 at a time.
+# - Its necesarry to cut them up.
 # - Cutting is performed on the transformed Impulses
 #
 # ## Doing
@@ -117,9 +125,13 @@ for position in NR.keys():
     rotate_sig_lst(cut_up)
 
     end_cut = int(3.2/cut_up[0].dt)   # min([el.n_tot for el in cut_up])
-    imp_avg = Signal(signal_lst_imp=[sig.cut_signal(t_start=0, t_end=.1, force_n=end_cut) for sig in cut_up])
+    imp_avg = Signal(
+        signal_lst_imp=[sig.cut_signal(t_start=0,
+                                       t_end=.1,
+                                       force_n=end_cut) for sig in cut_up])
 
     imp_avg_down = imp_avg.resample(in_Sample)
-    imp_avg_down.write_wav(name=AVG_DIR + '/IMP_' + position + '.wav', F_samp=in_Sample)
+    imp_avg_down.write_wav(name=AVG_DIR + '/IMP_' + position + '.wav',
+                           F_samp=in_Sample)
 
 # %%

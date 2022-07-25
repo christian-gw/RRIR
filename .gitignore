@@ -1,8 +1,8 @@
 __pycache__/
 .ipynb_checkpoints/
 Old_Versions/
-Work_Dir/
 .vscode/
 *.jsonc
 *.wav
 *.mm
+*.png
