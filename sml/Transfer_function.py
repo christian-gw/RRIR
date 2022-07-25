@@ -1,5 +1,4 @@
 from datetime import datetime
-from sml.Signal import appl_win, create_band_lst, Signal
 import matplotlib.pyplot as plt
 from scipy.fft import ifft  # , fft,  fftfreq  # , fftshift
 # from scipy.signal.windows import tukey, blackmanharris  # , hann
@@ -8,6 +7,10 @@ import scipy.signal as sg
 import numpy as np
 # import os
 
+if __name__ == "__main__":
+    from Signal import appl_win, create_band_lst, Signal
+else:
+    from sml.Signal import appl_win, create_band_lst, Signal
 
 def dbg_info(txt, verbose=False):
     """Print debug info if global VERBOSE = True"""
@@ -51,7 +54,7 @@ class TransferFunction:
 
         elif 'xf' in kwargs and 'hf' in kwargs:
             self.xf = kwargs.get('xf', None)
-            
+
             self.hf = kwargs.get('hf', None)
             if type(self.hf)==list:
                 self.hf = np.array(kwargs.get('hf', None)).mean(axis=0)

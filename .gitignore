@@ -4,3 +4,5 @@ Old_Versions/
 Work_Dir/
 .vscode/
 *.jsonc
+*.wav
+*.mm

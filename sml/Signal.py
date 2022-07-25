@@ -6,6 +6,7 @@ import scipy.signal as sg
 import librosa as lr
 import numpy as np
 import os
+import gc
 from scipy.io import wavfile
 
 
@@ -121,6 +122,10 @@ class Signal:
 
         Signal.sig_nr += 1
         Signal.entity.append(self)
+
+    def __del__(self):
+        del self.y
+        gc.collect()
 
     def __mul__(self, factor):
         """Operator overload to multiply y-array of signal by factor."""

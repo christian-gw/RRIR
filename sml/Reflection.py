@@ -1,14 +1,20 @@
 
 from datetime import datetime
 import matplotlib.pyplot as plt
-# from sml.Signal import Signal
-from sml.Transfer_function import TransferFunction
+
 # from scipy.fft import fft, ifft, fftfreq  # , fftshift
 # from scipy.signal.windows import tukey, blackmanharris  # , hann
 # import scipy.signal as sg
 # import librosa as lr
 import numpy as np
 # import os
+
+if __name__ == "__main__":
+    # from Signal import Signal
+    from Transfer_function import TransferFunction
+else:
+    # from sml.Signal import Signal
+    from sml.Transfer_function import TransferFunction
 
 
 def dbg_info(txt, verbose=False):

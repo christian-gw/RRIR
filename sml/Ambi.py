@@ -9,21 +9,17 @@
 #
 # 2018_Schulze-Forster_The B-Format – ...
 # Recording, Auralization and Absorbtion Measurements.pdf
-#
-#
-# asdf
+
 
 # %%codecell
+import numpy as np
+from scipy import signal
+import matplotlib.pyplot as plt
+
 if __name__ == "__main__":
-    import numpy as np
     import Signal as sg
-    from scipy import signal
-    import matplotlib.pyplot as plt
 else:
-    import numpy as np
     import sml.Signal as sg
-    from scipy import signal
-    import matplotlib.pyplot as plt
 
 
 # %%codecell
