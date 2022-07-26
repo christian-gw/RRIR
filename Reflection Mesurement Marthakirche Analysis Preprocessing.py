@@ -33,7 +33,8 @@ F_up = 500e3
 # ######## Please specify where the Files are ##############
 ############################################################
 
-TARGET_DIR = 'C:/Users/gmeinwieserch/Documents/Python/Reflection/Work_Dir_Reflection/'
+TARGET_DIR = """C:/Users/gmeinwieserch/Documents/Python/
+Reflection/Work_Dir_Reflection/"""
 
 
 NAME = 'REC0%s.wav'

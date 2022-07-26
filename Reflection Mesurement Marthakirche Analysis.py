@@ -50,7 +50,8 @@ F_up = 500e3
 # ######## Please specify where the Files are ##############
 ############################################################
 
-AVG_DIR = 'C:/Users/gmeinwieserch/Documents/Python/Reflection/Work_Dir_Reflection/20220210_0957_avg/'
+AVG_DIR = """C:/Users/gmeinwieserch/Documents/Python/Reflection/
+Work_Dir_Reflection/20220210_0957_avg/"""
 NAME = 'IMP_%s.wav'
 
 NR = {'Wand_0_0': ['Wall - LR = 0 m, H = 0 m, NeutrH = 1.6 m'],
@@ -151,7 +152,8 @@ for i, position in zip(range(len(NR)), NR.keys()):
 
     reflection_dist = mea_Marth.mp_lst[i].calc_c_geo(norm=False)
     print(reflection_dist)
-    mea_Marth.mp_lst[i].corrections['c_geo'] = (reference_dist/reflection_dist)**2
+    mea_Marth.mp_lst[i].corrections['c_geo'] = (reference_dist /
+                                                reflection_dist)**2
     # print(mea_Marth.mp_lst[i].corrections['c_geo'])
     mea_Marth.mp_lst[i].apply_c()
 

@@ -29,7 +29,7 @@ files = {1: """Gang_1.WAV""",
          3: """Gang_3.WAV""",
          4: """Gang_4.WAV"""}
 
-# %% 
+# %%
 # # 2. Sweep and inv creation
 # Sweep generation
 x = sg.Signal(par_sweep=(f1, T, f2), dt=1/fs)
@@ -62,7 +62,6 @@ for key in files:
 # print('Synced signals...')
 
 # Averaging was not employed here
-# 
 
 for el in zip(range(1, 5), h_tot):
     plt.plot(np.real(el[1].y), label=el[0], lw=.25)
