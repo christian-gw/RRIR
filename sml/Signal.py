@@ -461,16 +461,16 @@ class Signal:
         f_range = [50, 1/(3*self.dt)]
 
         # Spectrogram
-        fc, tc, Spec = sg.spectrogram(self.y.real,           # signal
-                                      fs=1/self.dt,          # Samplingrate
-            # tuckey is rising cos, uniform, falling cos window
-                                      window=('tukey', .25),
-            # alpha factor specifies the proportion wich is cos
-                                      nperseg=n_win,         # Blocksize
-            # Overlap Samples overlap (default nperseg//8)
-                                      noverlap=1*n_win//8)
+        # tuckey is rising cos, uniform, falling cos window
+        # alpha factor specifies the proportion wich is cos
+        # Overlap Samples overlap (default nperseg//8)
         # Alpha of tuckey.25 and nperseg//8 means, that the
         # Overlap is in the rising/faling cos range of the win
+        fc, tc, Spec = sg.spectrogram(self.y.real,           # signal
+                                      fs=1/self.dt,          # Samplingrate
+                                      window=('tukey', .25),
+                                      nperseg=n_win,         # Blocksize
+                                      noverlap=1*n_win//8)
 
         # Generate figure
         fig, ax = plt.subplots(1, figsize=(10, 6))

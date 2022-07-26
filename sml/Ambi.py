@@ -24,6 +24,20 @@ else:
 
 # %%codecell
 class Mic:
+    """Class to learn about Mic-patterns
+
+    Parameters
+    ----------
+    alpha: float
+        alpha value of the mic wich specifies directivity
+
+    Methods
+    -------
+    plot_directivity_2d() -> fig, ax
+        Plots directivity plot in 2d
+    plot_directivity_3d() -> fig, ax
+        Plots directivity plot in 3d"""
+
     def __init__(self, alpha):
         self.alpha = alpha
 
@@ -62,9 +76,16 @@ class Mic:
 
 class AmbiMic:
     """Class to hold information about the Ambisonics-Mic.
-    Takes
-      r - Radius of 1.O Ambisonics mic
-      a - alpha value which specifies Form"""
+
+    Calculates the Ambisonics mic parameters and correction factors.
+    The correctioni is calculatet according to Gerzon # TODO: Source
+
+    Parameters
+    ----------
+    r: float
+        Radius of 1.O Ambisonics mic
+    a: float
+        alpha value which specifies Form"""
     def __init__(self,
                  R,
                  a,
@@ -134,15 +155,30 @@ class AmbiMic:
 
 class ambiSig:
     """Signal Class for Ambisonics signal.
+
     Takes a array of 4 Signals which form a A-Format and create a B-Format.
     Order of signals according to Sennheiser Ambeo VR Manual:
     1   Yellow  FLU (Sennheiser)     RB (Faller)
     2   Red     FRD (Sennheiser)     LB (Faller)
     3   Blue    BLD (Sennheiser)     RF (Faller)
     4   Green   BRU (Sennheiser)     LF (Faller)
-    Contains methods to manipulate B-Format:
-    ambiSig.rotate_b_format()
-    ambiSig.extract_dir_signal()"""
+
+    Parameters
+    ----------
+    Signals: list(Signal)
+        List of measurement Signal s according to docstring
+    mic_settings: AmbiMic
+        AmbiMic object of the used microphone
+
+    Methods
+    -------
+    _rotate_b_format() -> None
+        Rotates the coordinate System of the B-Format
+    get_one_direction() -> Signal
+        Performs a rotation so, that the x-figure 8 of the B-Format
+        points in the specified direction and extracts this x-track.
+    safe_b_format(names) -> None
+        Safes B-Format to specified filename"""
 
     def __init__(self,
                  Signals: list,
@@ -210,7 +246,12 @@ class ambiSig:
     def _rotate_b_format(self,
                          angle: np.array = np.eye(3)):
         """Rotate the B-Format to a new coordinate system
-        Gets self.B_format and rotates it with rotation matrix angle."""
+
+        Parameters
+        ----------
+        angle: np.array(3,3)
+            Rotation Matrix to rotate the B-format by."""
+
         self.b_rot = np.dot(angle, self.b_format[1:])
 
     def _extract_dir_signal(self,
@@ -227,13 +268,34 @@ class ambiSig:
 
     def safe_b_format(self, names: dict):
         """Safes the b_format as 4 files in the local directory.
-        Filenames are specified in dictionary name."""
+
+        Parameters
+        ----------
+        names: dict(4* x: str)
+            4 Strings for single file names in dict"""
+
         for key in names:
             self.b_format[key-1].write_wav(names[key])
 
     def get_one_direction(self, phi, theta, rad=True):
-        """Setts up the necesarry rotation matrix
-        and extracts a signal like a fig8 mic pointet in that direction"""
+        """Gets Signal directive (fig 8) of one direction
+
+        Setts up the necesarry rotation matrix
+        and extracts a signal like a fig8 mic pointet in that direction
+
+        Parameters
+        ----------
+        phi: float
+            Rotation angle angle around Z (up) XZ plane = 0
+        theta: float
+            Rotation angle around Y XZ plane = 0
+        rad: bool
+            Wether angles are in deg or rad
+
+        Returns
+        -------
+        Signal: Signal
+            Directive Signal"""
 
         rot_mat = self._create_rot_matrix(phi, theta, rad=rad)
         return self._extract_dir_signal(rot_mat)
