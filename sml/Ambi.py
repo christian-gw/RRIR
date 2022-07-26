@@ -18,7 +18,10 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     import Signal as sg
+elif __name__[:3] != 'sml':
+    import Signal as sg
 else:
+    print(__name__)
     import sml.Signal as sg
 
 
@@ -193,7 +196,7 @@ class ambiSig:
             self.b_format.append(sg.Signal(y=s, dt=dt))
 
     def __create_b_format(self, mic: AmbiMic):
-        """Transfere from A-format to B-format
+        """Transfer from A-format to B-format
         Gets a_format and mic_settings."""
 
         lfu, rfd, lbd, rbu = [s.y for s in self.a_format]
@@ -222,48 +225,32 @@ class ambiSig:
 
         return [w, x, y, z]
 
-    def _create_rot_matrix(self, phi, theta, rad=True):
-        """Creates rotation matrix around
-        phi - rotation angle angle around Z (up)
-        theta - rotation angle around Y (L of X)"""
-
-        if not rad:
-            phi, theta = np.radians((phi, theta))
-
-        cp = np.cos(phi)
-        ct = np.cos(theta)
-        sp = np.sin(phi)
-        st = np.sin(theta)
-
-        Rz = np.array([[ct, -st, 0],
-                       [st,  ct, 0],
-                       [00,   0, 1]])
-        Ry = np.array([[cp,  0, sp],
-                       [00,  1, 0],
-                       [-sp, 0, cp]])
-        return np.dot(Rz, Ry)
-
     def _rotate_b_format(self,
-                         angle: np.array = np.eye(3)):
+                         rot_mat: np.array = np.eye(3)):
         """Rotate the B-Format to a new coordinate system
 
         Parameters
         ----------
-        angle: np.array(3,3)
+        rot_mat: np.array(3,3)
             Rotation Matrix to rotate the B-format by."""
 
-        self.b_rot = np.dot(angle, self.b_format[1:])
+        self.b_rot = np.dot(rot_mat, self.b_format[1:])
 
     def _extract_dir_signal(self,
-                            angle: np.array = np.eye(3)):
-        """Get B-Format and direction angle and find directive signal."""
+                            rot_mat: np.array = np.eye(3)):
+        """Get B-Format and direction rot_mat and find directive signal."""
 
-        # First Sketch: Linearcombination of xyz:
-        direction = np.dot(angle, np.array([1., 0., 0.]))
+        # First Step: Linearcombination of xyz:
+        direction = np.dot(rot_mat, np.array([1., 0., 0.]))
+
         # print(direction)
-        # print(self.b_format[1:])
-        weighted = 1/3*direction * self.b_format[1:]
-        # print(weighted)
+
+        # Operatoroverloading on Signal
+        weighted = direction * self.b_format[1:]
+
+        # Second Step: Weight in the Mic directivity
+        # Caution: If Directivity gets to small, div0 or overnoise
+
         return sg.Signal(signal_lst_imp=weighted)
 
     def safe_b_format(self, names: dict):
@@ -297,13 +284,55 @@ class ambiSig:
         Signal: Signal
             Directive Signal"""
 
-        rot_mat = self._create_rot_matrix(phi, theta, rad=rad)
+        rot_mat = create_rot_matrix(phi, theta, rad=rad)
         return self._extract_dir_signal(rot_mat)
 
 
 def test(i):
     """Used to test the unittest in test_Ambi.py"""
     return i
+
+
+def create_rot_matrix(phi, theta, rad=True):
+    """Creates rotation matrix.
+
+    Usage
+    -----
+        rot_mat = create_rot_matrix(phi, theta, rad=True)
+        vector = np.array([x, y, z])
+        rot_vector = np.dot(rot_mat, vector)
+
+    Parmameters
+    -----------
+    phi: float
+        Rotation angle angle around Z with X = 0
+    theta: float
+        Rotation angle around x Z=0
+    rad: bool
+        Wether angles are in radiant or degree
+
+    Returns
+    -------
+    Rotation Matrix: np.array(3,3)"""
+
+    if not rad:
+        phi, theta = np.radians((phi, theta))
+
+    cp = np.cos(phi)
+    ct = np.cos(theta)
+    sp = np.sin(phi)
+    st = np.sin(theta)
+
+    Rx = np.array([[1, -0, 0],
+                   [0,  ct, -st],
+                   [00,   st, ct]])
+    Rz = np.array([[cp,  -sp, 0],
+                   [sp,  cp, 0],
+                   [0, 0, 1]])
+
+    S = np.dot(Rx, Rz)
+    # print(np.round(S, 2))
+    return S
 
 
 # %%
