@@ -779,7 +779,9 @@ def create_band_lst(fact=1):
                 f_up
                 f_centre"""
 
-    f_centre = [round(10**3 * 2**(exp*fact)) for exp in range(round(-6/fact), round((5-1)/fact)+1)]
+    f_centre = [round(10**3 * 2**(exp*fact))
+                for exp in range(round(-6/fact),
+                                 round((5-1)/fact)+1)]
 
     fd = 2**(1/2*fact)
     f_low = [round(centre/fd, 1) for centre in f_centre]

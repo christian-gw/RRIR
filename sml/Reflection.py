@@ -34,22 +34,33 @@ def dbg_info(txt, verbose=False):
 
 
 class Measurement:
-    """Class for handling a whole measurement with multiple Measurement points
-       containing one signal each.
-       If there are multiple signals (should be),
-       averaging before creation of Measurement Point is advised.
-       Attributes:
-         self.m_name   Name of the Measurement (Meta data class is planned)
-         self.d_mic    Distance
-         self.d_probe  Distance
-         self.mp_lst   List containing all measurementpoints with signals
-         self.n_mp     Over all number of mps
-       Methods:
-         self.create_mp()     creates a measurement point
-         self.del_mp()        deletes a measurement point by number
-         self.plot_overview() plots an overview of all measurement points
-                              relative to source and probe
-         """
+    """Class for handling a whole measurement with multiple MeasurementPoint s.
+
+    If there are multiple signals (should be),
+    averaging before creation of Measurement Point is advised.
+    Attributes
+    ----------
+    m_name: str
+       Name of the Measurement (Meta data class is planned)
+    d_mic: float
+       Distance
+    d_probe: float
+       Distance
+    mp_lst: list(MeasurementPoint)
+       List containing all measurementpoints with signals
+    n_mp: int
+       Over all number of mps
+
+    Methods
+    -------
+    create_mp(number, _signal, pos) -> None
+        creates a measurement point
+    del_mp(number) -> None
+        deletes a measurement point by number
+    plot_overview() -> fig, ax
+        plots an overview of all measurement points
+        relative to source and probe
+    average() -> None"""
 
     def __init__(self, name, d_mic, d_probe):
         self.m_name = name
@@ -60,16 +71,32 @@ class Measurement:
         self.average = []
 
     def create_mp(self, number, _signal, pos):
-        """Create measurement point object with specific number and _signal
-        object for mp Position pos [x,y]"""
+        """Create measurement point object
+
+        MeasurementPoint holds a specific number and _signal
+        object for mp Position pos [x,y]
+
+        Parameters
+        ----------
+        number: int
+            Number of the measurement.
+            Norm: 9 MPs with numbering like number block
+        d_mic: float
+            Distance between source and microphone
+        d_probe: float
+            Distance between mic and probe"""
 
         self.mp_lst.append(MeasurementPoint(
             number, (self.d_mic, self.d_probe), _signal, pos))
         self.n_mp += 1
 
     def del_mp(self, number):
-        """Delete measurement point object specified by number.
-           No reaction if not present."""
+        """Delete MeasurementPoint by number.
+
+        Parameters
+        ----------
+        number: int
+            Number of MeasurementPoint to delete."""
 
         for i, el in enumerate(self.mp_lst):
             if el.no == number:
@@ -77,7 +104,17 @@ class Measurement:
                 # return 0
 
     def plot_overview(self):
-        """Plots an overview of Source, Probe and Mics. All units in [m]"""
+        """Plots an overview of Source, Probe and Mics.
+
+        All units in [m
+
+        Returns
+        -------
+        fig: plt.Figure
+            Figure Object handle
+        ax: plt.Axis
+            Axis Object handle"""
+
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
         x = []
@@ -109,17 +146,12 @@ class Measurement:
         return fig, ax
 
     def average_mp(self):
-        """
-        Averages all mps
-        If required make sure to apply Corrections on a mp level
-        Parameters
-        ----------
-        Requires full mp_lst
+        """Averages all created MeasurementPoint s
 
-        Returns
-        -------
-        Averaged tf
-        """
+        If required make sure to apply Corrections on a mp level.
+        Requires no parameters but needs a full mp_lst.
+        Returns nothing, but sets the objects average (TF) attribute."""
+
         n_mp = len(self.mp_lst)
         sum = np.zeros(len(self.mp_lst[0].tf.hf))
 
@@ -131,26 +163,53 @@ class Measurement:
 
 
 class MeasurementPoint:
-    """Class for one measuremnet point,
+    """Class for one measuremnet point.
+
     it should be included in the 'Measurement'-class.
-       Norm suggests 3x3 measurement grid with distances .4 m,
-       numbered like a phone.
+    Norm suggests 3x3 measurement grid with distances .4 m,
+    numbered like a phone.
 
-    Attributes:
-     self.no         (init)        number of measurement point
-     self.x, self.y  (init as pos) position rel to probe normal through source
-     self.tf         (init)        transffct obj from mp (if multiple avr)
-     self.d_mic      (init)        distance between source and microphone
-     self.d_probe    (init)        distance between microphone and probe
-     self.beta       (__geo)       reflection angle
-     self.c_geo      (__c_geo)     correction coefficient for sound power
-                                         distribution
+    Attributes
+    ----------
+    no: int
+        Number of measurement point
+        Set with init
+    x: float
+        Position rel to probe normal through source
+        Set with init
+    y: float
+        Position rel to probe normal through source
+        Set with init
+    tf: TransferFunction
+        Transffct obj from mp (if multiple avr)
+        Set with init
+    d_mic: float
+        Distance between source and microphone
+        Set with init
+    d_probe: float
+        Distance between microphone and probe
+        Set with init
+    beta: float
+        Reflection angle
+        Set with __geo()
+    c_geo: float
+        Correction coefficient for sound power distribution
+        Set with __c_geo
 
-    Public methods:
-     self.calc_c_geo()  Calcs self.c_geo, calls self.__c_geo and self.__geo
-     self.calc_c_dir()  Currently not implemented bc its assumed, that
-                       omnisource has no directivity
-    """
+    Methods
+    -------
+    calc_c_geo(norm) -> if norm: returns traveled sound distance: float
+        Needs gemometry to be set.
+        Calcs the correction factors for geometrical correction.
+        Sets to attribute if not otherwise specified by norm.
+    calc_c_dir() -> 0
+        Currently not implemented bc its assumed,
+        that omnisource has no directivity.
+        Dummy bc Norm specifies correction.
+    apply_c() -> None
+        Applies all calculated corrections to the MPs signal
+    beta_in_deg() -> float
+        Returns reflection angle in degrees"""
 
     def __init__(self, number, distances, transfer_function, pos):
         """Init with good defaults or provided values."""
@@ -208,7 +267,8 @@ class MeasurementPoint:
 
         # Set c_geo
         if norm:
-            self.corrections['c_geo'] = ((travel_to_r + travel_from_r) / r_xyz)**2
+            self.corrections['c_geo'] = ((travel_to_r + travel_from_r)
+                                         / r_xyz)**2
         else:
             return travel_to_r + travel_from_r
 
