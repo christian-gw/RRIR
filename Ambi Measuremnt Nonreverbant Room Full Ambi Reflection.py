@@ -167,7 +167,10 @@ if True:
         ax.set_xlabel('t [s]')
         ax.legend()
 
-    norm_fak = 1/(np.max(np.abs(np.concatenate((direct_sig.y, perp1_sig.y, perp2_sig.y, ref_sig.y)))))
+    norm_fak = 1/(np.max(np.abs(np.concatenate((direct_sig.y,
+                                                perp1_sig.y,
+                                                perp2_sig.y,
+                                                ref_sig.y)))))
 
     for el in zip(range(4), [direct_sig, perp1_sig, perp2_sig, ref_sig]):
         el[1]*norm_fak
