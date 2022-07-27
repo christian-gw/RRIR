@@ -15,13 +15,13 @@
 import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
+from copy import deepcopy
 
 if __name__ == "__main__":
     import Signal as sg
 elif __name__[:3] != 'sml':
     import Signal as sg
 else:
-    print(__name__)
     import sml.Signal as sg
 
 
@@ -233,6 +233,7 @@ class ambiSig:
         ----------
         rot_mat: np.array(3,3)
             Rotation Matrix to rotate the B-format by."""
+# TODO Faulty
 
         self.b_rot = np.dot(rot_mat, self.b_format[1:])
 
@@ -246,7 +247,12 @@ class ambiSig:
         # print(direction)
 
         # Operatoroverloading on Signal
-        weighted = direction * self.b_format[1:]
+        # Deepcopy needed bc multiplication alters signal permanently
+        decop = deepcopy(self.b_format[1:])
+        weighted = direction * decop
+        del decop
+        # print('Max of B-Format:' +
+        #       str(np.max(self.b_format[1].y)))
 
         # Second Step: Weight in the Mic directivity
         # Caution: If Directivity gets to small, div0 or overnoise

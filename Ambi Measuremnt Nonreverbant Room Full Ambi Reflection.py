@@ -27,7 +27,7 @@ import sml.Ambi as ambi
 # get_ipython().run_line_magic('matplotlib', 'qt')
 # get_ipython().run_line_magic('matplotlib', 'inline')
 
-PLOT = True
+PLOT = False
 
 # Sweep Parameters
 f1 = 50
@@ -76,6 +76,8 @@ for key in files:
 # %% Plotting and/or Saving
 # 3.3 Plot and/or save Impulses
 if PLOT:
+    print('Plotting raw Impulses.')
+
     fig, ax = plt.subplots()
     for el in zip(range(1, 5), h_tot):
         ax.plot(el[1].axis_arrays['t'],
@@ -90,6 +92,7 @@ if PLOT:
 
 # %% Calculate Ambisonics
 # 4. Create Ambisonics signal
+print('Calculating Ambisonics Signal.')
 
 # Microphone settings
 am = ambi.AmbiMic(1.47, .5)
@@ -100,6 +103,8 @@ aSig = ambi.ambiSig(h_tot, am)
 
 # Plot and Format
 if PLOT:
+    print('Plotting calculated Signals')
+
     fig, ax = plt.subplots()
     for el in zip(['w', 'x', 'y', 'z'], aSig.b_format):
         ax.plot(el[1].axis_arrays['t'],
@@ -143,21 +148,24 @@ if False:
             print('Plotted B-Format Transfer Function')
 # %% Get Directive mono
 # 6. Export Aimed and perpendicular directive signals
-if True:
+if False:
+    print('Exporting Direct, Reflected and Perpendicular Signals.')
     # DEBUG ONLY ############
     aSig = ambi.ambiSig(h_tot, am)
     # #######################
     # phi = 0 --> X
     # theta = 0 --> Z
-    direct_sig = aSig.get_one_direction(20, 00, rad=False)
+    direct_sig = aSig.get_one_direction(20, 90, rad=False)
     perp1_sig = aSig.get_one_direction(110, 0, rad=False)
     perp2_sig = aSig.get_one_direction(20, 90, rad=False)
     ref_sig = aSig.get_one_direction(20, 105, rad=False)
 
-    fig, ax = plt.subplots()
     tar_file_names = ['Direct', 'Perp1', 'Perp2', 'Reflection']
 
     if PLOT:
+        print('Plotting calculated Signals')
+        fig, ax = plt.subplots()
+
         for el in zip(range(4), [direct_sig, perp1_sig, perp2_sig, ref_sig]):
             ax.plot(el[1].axis_arrays['t'],
                     el[1].y,
@@ -176,17 +184,13 @@ if True:
         el[1]*norm_fak
         el[1].write_wav(tar_file_names[el[0]] + '.wav', norm=False)
 
-    # od_sig.plot_y_t()
 # %%
 # 7. Plot spherical max and delay
 
 # DEBUG ONLY ############
 # aSig = ambi.ambiSig(h_tot, am)
+aSig._rotate_b_format(ambi.create_rot_matrix(90, 0, rad=False))
 # #######################
-
-phi = np.linspace(0, 2*np.pi, 32)
-theta = np.linspace(0, 2*np.pi, 32)
-P, T = np.meshgrid(phi, theta)
 
 
 def calc_R(phi, theta, sig):
@@ -196,25 +200,57 @@ def calc_R(phi, theta, sig):
         line_max = []
         line_argmax = []
         for p in phi:
-            # print('Calling get_one_direction with:')
-            print('p, t :' + str(p) + ',' + str(t))
             directive_sig = sig.get_one_direction(p, t, rad=True)
+
+            # print('p, t :' + str(p) + ',' + str(t))
+            # print('Max of Directive Sig ' +
+            #       str(np.max(directive_sig.y)))
+
             line_max.append(np.max(directive_sig.y))
             index = np.argmax(directive_sig.y)
             line_argmax.append(directive_sig.axis_arrays['t'][index])
+            del directive_sig 
         arr_max.append(line_max)
         arr_argmax.append(line_argmax)
     return np.array(arr_max), np.array(arr_argmax)
 
 
-R_max, R_argmax = calc_R(phi, theta, aSig)
+plot_3D = False
 
-X = (R_argmax)*np.sin(T)*np.cos(P)
-Y = (R_argmax)*np.sin(T)*np.sin(P)
-Z = (R_argmax)*np.cos(T)
+if plot_3D:
+    print('Calculating and plotting for 3D Directivity.')
 
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
-ax.plot_surface(X, Y, Z)
+    phi = np.linspace(0, 2*np.pi, 32)
+    theta = np.linspace(0, 2*np.pi, 32)
+    P, T = np.meshgrid(phi, theta)
+
+    R_max, R_argmax = calc_R(phi, theta, aSig)
+
+    X = (R_max)*np.sin(T)*np.cos(P)
+    Y = (R_max)*np.sin(T)*np.sin(P)
+    Z = (R_max)*np.cos(T)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    ax.plot_surface(X, Y, Z)
+    plt.show()
+
+if not plot_3D:
+    print('Calculating and plotting 2D Directivity.')
+
+    # phi = np.array([11*360/(2*np.pi)])
+    phi = np.linspace(0, 2*np.pi, 72)
+    # theta = np.linspace(0, 2*np.pi, 32)
+    theta = np.array([0])
+
+    R_max, R_argmax = calc_R(phi, theta, aSig)
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+
+    # ax.plot(theta, np.transpose(R_max)[0])
+    ax.plot(phi, R_max[0])
+
 plt.show()
 # %%
+# for p,r in zip(phi, R_max[0]):
+#     r2d = 360/(2*np.pi)
+#     print("%f, \t %f" % (p*r2d, r))

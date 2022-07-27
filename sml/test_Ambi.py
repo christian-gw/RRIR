@@ -6,14 +6,19 @@ from Ambi import create_rot_matrix
 
 
 # Helpers for testing np.array
-def test_array_eq(x, y):
-    return unit.TestCase.assertIsNone(np.testing.assert_array_equal(x, y))
+def test_array_eq(obj, x, y, msg=None):
+    return unit.TestCase.assertIsNone(obj,
+                                      np.testing.assert_array_equal(x,
+                                                                    y),
+                                      msg=msg)
 
 
-def test_array_sim(x, y):
-    return unit.TestCase.assertIsNone(np.testing.assert_allclose(x,
+def test_array_sim(obj, x, y, msg=None):
+    return unit.TestCase.assertIsNone(obj,
+                                      np.testing.assert_allclose(x,
                                                                  y,
-                                                                 atol=.01))
+                                                                 atol=.01),
+                                      msg=msg)
 
 
 class ambiSig_test(unit.TestCase):
@@ -31,35 +36,43 @@ class ambiSig_test(unit.TestCase):
 
         # Rotate 90° around
         vec = np.array([1, 0, 0])
-        test_array_sim(rotate_vector(+0, +0, vec),
+        test_array_sim(self, rotate_vector(+0, +0, vec),
                        np.array([+1, +0, +0]))
-        test_array_sim(rotate_vector(+90, +0, vec),
+        test_array_sim(self, rotate_vector(+90, +0, vec),
                        np.array([+0, +1, +0]))
-        test_array_sim(rotate_vector(+0, +90, vec),
+        test_array_sim(self, rotate_vector(+0, +90, vec),
                        np.array([+1, +0, +0]))
-        test_array_sim(rotate_vector(+90, +90, vec),
+        test_array_sim(self, rotate_vector(+90, +90, vec),
                        np.array([+0, +0, +1]))
 
         # Over 90° and negative
-        test_array_sim(rotate_vector(+270, +0, vec),
+        test_array_sim(self,
+                       rotate_vector(+270, +0, vec),
                        np.array([+0, -1, +0]))
-        test_array_sim(rotate_vector(-90, +0, vec),
+        test_array_sim(self,
+                       rotate_vector(-90, +0, vec),
                        np.array([+0, -1, +0]))
-        test_array_sim(rotate_vector(-270, -270, vec),
+        test_array_sim(self,
+                       rotate_vector(-270, -270, vec),
                        np.array([+0, +0, +1]))
-        test_array_sim(rotate_vector(-270, -90, vec),
+        test_array_sim(self,
+                       rotate_vector(-270, -90, vec),
                        np.array([+0, +0, -1]))
 
         # Non orthogonal
-        test_array_sim(rotate_vector(+30, +0, vec),
+        test_array_sim(self,
+                       rotate_vector(+30, +0, vec),
                        np.array([np.sqrt(3)/2, .5, 0]))
-        test_array_sim(rotate_vector(+60, +0, vec),
+        test_array_sim(self,
+                       rotate_vector(+60, +0, vec),
                        np.array([.5, np.sqrt(3)/2, 0]))
 
         vec = np.array([0, 1, 0])
-        test_array_sim(rotate_vector(+0, +30, vec),
+        test_array_sim(self,
+                       rotate_vector(+0, +30, vec),
                        np.array([0, np.sqrt(3)/2, .5]))
-        test_array_sim(rotate_vector(+0, +60, vec),
+        test_array_sim(self,
+                       rotate_vector(+0, +60, vec),
                        np.array([0, .5, np.sqrt(3)/2]))
 
 
