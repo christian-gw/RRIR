@@ -33,9 +33,9 @@
 # %% codecell
 # 1. Import, Base Settings (System) and Base Settings (User)
 # from reflection_definitions import Signal, TransferFunction, Measurement
-from sml.Signal import Signal
-from sml.Signal import TransferFunction
-from sml.Signal import Measurement
+from RRIR.Signal import Signal
+from RRIR.Signal import TransferFunction
+from RRIR.Signal import Measurement
 
 import matplotlib.pyplot as plt
 import numpy as np

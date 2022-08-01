@@ -12,8 +12,8 @@ if __name__ == "__main__":
     # from Signal import Signal
     from Transfer_function import TransferFunction
 else:
-    # from sml.Signal import Signal
-    from sml.Transfer_function import TransferFunction
+    # from RRIR.Signal import Signal
+    from RRIR.Transfer_function import TransferFunction
 
 
 def dbg_info(txt, verbose=False):

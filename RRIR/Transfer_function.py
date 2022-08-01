@@ -10,7 +10,7 @@ import numpy as np
 if __name__ == "__main__":
     from Signal import appl_win, create_band_lst, Signal
 else:
-    from sml.Signal import appl_win, create_band_lst, Signal
+    from RRIR.Signal import appl_win, create_band_lst, Signal
 
 
 def dbg_info(txt, verbose=False):

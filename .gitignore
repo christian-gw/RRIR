@@ -1,6 +1,4 @@
-__pycache__/
-.ipynb_checkpoints/
-Old_Versions/
+Learning_Scripts/
 .vscode/
 *.jsonc
 *.wav

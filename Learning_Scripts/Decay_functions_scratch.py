@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import curve_fit
-from sml.Signal import Signal
+from RRIR.Signal import Signal
 
 
 def fit(imp_dec: Signal, xx):

@@ -1,7 +1,8 @@
-# SML-Toolbox
+# RRIR-Toolbox
 
 ### Make ready to ship
-- [ ] ? Name
+- [x] Name (Formerly sml Toolbox)
+  - [x] RRIR reflektion_room_impulse_response Toolbox
 - [ ] Documentation  
   - [x] Function docstrings --> np format
   - [ ] Sphinx Setup
@@ -10,12 +11,14 @@
   - [x] Overhaul Ambi.get_one_direction
   - [x] Test Ambi.get_one_direction
   - [ ] Add Hedgehog like visu
-  - [ ] Add Decay measuremnt from Deconvolution Project
+  - [x] Add Decay measuremnt from Deconvolution Project
 - [ ] Shipping
-  - [ ] One Folder
+  - [x] One Folder
+    - [x] One Folder for Package --> Ship
+    - [x] One Folder for Examples
   - [ ] Shipable
-  - [ ] Requirements
-  - [ ] ? Setup.py
+  - [x] Requirements
+  - [x] Setup.py --> Decision: No!
 - [ ] Visu
   - [ ] Visu for decay
   - [ ] Frontend

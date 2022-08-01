@@ -19,10 +19,10 @@ from copy import deepcopy
 
 if __name__ == "__main__":
     import Signal as sg
-elif __name__[:3] != 'sml':
+elif __name__[:3] != 'RRIR':
     import Signal as sg
 else:
-    import sml.Signal as sg
+    import RRIR.Signal as sg
 
 
 # %%codecell

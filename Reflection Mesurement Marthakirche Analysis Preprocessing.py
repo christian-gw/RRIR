@@ -16,8 +16,8 @@
 # %%codecell
 # 1. Import, Base Settings (System) and Base Settings (User)
 # from reflection_definitions import Signal, rotate_sig_lst
-from sml.Signal import Signal
-from sml.Signal import rotate_sig_lst
+from RRIR.Signal import Signal
+from RRIR.Signal import rotate_sig_lst
 
 from os import mkdir, path
 import matplotlib.pyplot as plt

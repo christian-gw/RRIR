@@ -19,9 +19,9 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 # from IPython import get_ipython
-import sml.Signal as sg
-import sml.Transfer_function as tf
-import sml.Ambi as ambi
+import RRIR.Signal as sg
+import RRIR.Transfer_function as tf
+import RRIR.Ambi as ambi
 # Signal  # , rotate_sig_lst()
 
 # get_ipython().run_line_magic('matplotlib', 'qt')

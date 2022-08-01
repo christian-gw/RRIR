@@ -11,7 +11,7 @@
 from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
-import sml.Signal as sg
+import RRIR.Signal as sg
 # Signal  # , rotate_sig_lst()
 
 # Sweep Parameters
