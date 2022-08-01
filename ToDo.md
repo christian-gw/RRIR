@@ -7,8 +7,8 @@
   - [ ] Sphinx Setup
   - [ ] Creation of Doku
 - [ ] Functionality
-  - [ ] Overhaul Ambi.get_one_direction
-  - [ ] Test Ambi.get_one_direction
+  - [x] Overhaul Ambi.get_one_direction
+  - [x] Test Ambi.get_one_direction
   - [ ] Add Hedgehog like visu
   - [ ] Add Decay measuremnt from Deconvolution Project
 - [ ] Shipping
@@ -19,7 +19,4 @@
 - [ ] Visu
   - [ ] Visu for decay
   - [ ] Frontend
-    - [ ] ? Bokeh
-    - [ ] ? EasyPythonGui
-    - [ ] ? matplotlib
-    - [ ] ? Webfrontend
+    - [ ] Bokeh

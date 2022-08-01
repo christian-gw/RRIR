@@ -148,7 +148,7 @@ if False:
             print('Plotted B-Format Transfer Function')
 # %% Get Directive mono
 # 6. Export Aimed and perpendicular directive signals
-if False:
+if True:
     print('Exporting Direct, Reflected and Perpendicular Signals.')
     # DEBUG ONLY ############
     aSig = ambi.ambiSig(h_tot, am)
@@ -162,7 +162,7 @@ if False:
 
     tar_file_names = ['Direct', 'Perp1', 'Perp2', 'Reflection']
 
-    if PLOT:
+    if True:
         print('Plotting calculated Signals')
         fig, ax = plt.subplots()
 
@@ -189,7 +189,7 @@ if False:
 
 # DEBUG ONLY ############
 # aSig = ambi.ambiSig(h_tot, am)
-aSig._rotate_b_format(ambi.create_rot_matrix(90, 0, rad=False))
+# aSig._rotate_b_format(ambi.create_rot_matrix(90, 0, rad=False))
 # #######################
 
 
@@ -209,13 +209,13 @@ def calc_R(phi, theta, sig):
             line_max.append(np.max(directive_sig.y))
             index = np.argmax(directive_sig.y)
             line_argmax.append(directive_sig.axis_arrays['t'][index])
-            del directive_sig 
+            del directive_sig
         arr_max.append(line_max)
         arr_argmax.append(line_argmax)
     return np.array(arr_max), np.array(arr_argmax)
 
 
-plot_3D = False
+plot_3D = True
 
 if plot_3D:
     print('Calculating and plotting for 3D Directivity.')
@@ -251,6 +251,4 @@ if not plot_3D:
 
 plt.show()
 # %%
-# for p,r in zip(phi, R_max[0]):
-#     r2d = 360/(2*np.pi)
-#     print("%f, \t %f" % (p*r2d, r))
+

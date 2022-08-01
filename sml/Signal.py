@@ -39,15 +39,19 @@ class Signal:
     ----------
     **kwargs: dict
         path: str
+            Needs also name kwarg
+            Path of the file to load
         name: str
-        sweep_par: Tuple
+            Needs also path kwarg
+            Name of the file to load
+        par_sweep: Tuple
             Needs dt kwarg.
             (start_freq: float,
             sweep_dur: float,
             end_freq: float)
         dt: float
             Timebase of the signal
-            Needs sweep_par or y kwarg.
+            Needs par_sweep or y kwarg.
         signal_lst_imp: list of Signal
             List of Signal to average
             Time alignment should be done externally
@@ -85,9 +89,11 @@ class Signal:
         Total time
     n_tot: Int
         Number of samples
-    y: np.array
+    y: np.array(float)
         Time signal
-    axis_array: dict
+    y_f: np.array(float)
+        Spectrum Signal
+    axis_arrays: dict
         t: np.array
             Time axis
         xf: np.array
@@ -165,12 +171,13 @@ class Signal:
         self.__fft_all()
 
         Signal.sig_nr += 1
-        Signal.entity.append(self)
+        # Signal.entity.append(self)
 
-    def __del__(self):
-        """Operator overload to make sure all np.arrays are deleted"""
-        del self.y, self.axis_arrays['t'], self.axis_arrays['xf']
-        gc.collect()
+    # def __del__(self):
+    #     """Operator overload to make sure all np.arrays are deleted"""
+    #     # print('Deleting arrays.')
+    #     del self.y, self.axis_arrays['t'], self.axis_arrays['xf']
+    #     gc.collect()
 
     def __mul__(self, factor):
         """Operator overload to multiply y-array of signal by factor."""
