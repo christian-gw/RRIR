@@ -2,12 +2,13 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from scipy.fft import fft, fftfreq  # , fftshift, ifft
 from scipy.signal.windows import tukey, blackmanharris  # , hann
-import scipy.signal as sg
+from scipy.signal import chirp, spectrogram
+from scipy.signal import convolve, sosfilt, butter, resample, correlate
 import librosa as lr
 import numpy as np
 import os
-import gc
 from scipy.io import wavfile
+from scipy.optimize import curve_fit
 
 
 def dbg_info(txt, verbose=False):
@@ -185,7 +186,7 @@ class Signal:
         self.__fft_all()
         return self
 
-    __rmul__ = __mul__
+    __rmul__ = __mul__  # make sure a*Signal == Signal*a
 
     def __load_data(self, path):
         """Load Data from wav and calculate meta information.
@@ -258,10 +259,10 @@ class Signal:
         n_tot = int(T/dt)
         xf = fftfreq(n_tot, dt)[:n_tot//2]
         t = np.linspace(0, _par_sweep[1], int(_par_sweep[1]/dt))
-        y = sg.chirp(t,                     # time axis
-                     *_par_sweep,             # Sweeppar
-                     method='logarithmic',   # Logarithmic Sweep
-                     phi=90)                 # start with negative slope
+        y = chirp(t,                     # time axis
+                  *_par_sweep,             # Sweeppar
+                  method='logarithmic',   # Logarithmic Sweep
+                  phi=90)                 # start with negative slope
         return T, n_tot, t, xf, y
 
     def __inv_u(self, x):
@@ -331,8 +332,8 @@ class Signal:
         Response: Signal"""
 
         i_u = self.__inv_u(exitation)
-        imp = sg.convolve(self.y, i_u,    # convolution of signal with inverse
-                          mode='same')
+        imp = convolve(self.y, i_u,    # convolution of signal with inverse
+                       mode='same')
         # same means conv calculates a full (zero padding) and cuts out middle
         return Signal(y=imp, dt=self.dt)
 
@@ -349,10 +350,14 @@ class Signal:
         Filtered Signal: Signal
             Signalcomponent in frange"""
 
-        sos = sg.butter(10, frange, btype='bp',
-                        analog=False, output='sos', fs=1/self.dt)
+        sos = butter(10,
+                     frange,
+                     btype='bp',
+                     analog=False,
+                     output='sos',
+                     fs=1/self.dt)
 
-        filt = sg.sosfilt(sos, self.y)
+        filt = sosfilt(sos, self.y)
         # self.y = filt
         return Signal(y=filt, dt=self.dt)
 
@@ -372,7 +377,7 @@ class Signal:
         factor = Fs_new * self.dt
         n_new = int(self.n_tot * factor)
 
-        y, t = sg.resample(self.y, n_new, self.axis_arrays['t'])
+        y, t = resample(self.y, n_new, self.axis_arrays['t'])
 
         return Signal(y=y, dt=1/Fs_new)
 
@@ -473,11 +478,11 @@ class Signal:
         # Overlap Samples overlap (default nperseg//8)
         # Alpha of tuckey.25 and nperseg//8 means, that the
         # Overlap is in the rising/faling cos range of the win
-        fc, tc, Spec = sg.spectrogram(self.y.real,           # signal
-                                      fs=1/self.dt,          # Samplingrate
-                                      window=('tukey', .25),
-                                      nperseg=n_win,         # Blocksize
-                                      noverlap=1*n_win//8)
+        fc, tc, Spec = spectrogram(self.y.real,           # signal
+                                   fs=1/self.dt,          # Samplingrate
+                                   window=('tukey', .25),
+                                   nperseg=n_win,         # Blocksize
+                                   noverlap=1*n_win//8)
 
         # Generate figure
         fig, ax = plt.subplots(1, figsize=(10, 6))
@@ -517,11 +522,11 @@ class Signal:
         # Consider reviewing DIN p.8
         # "Filter with real pole at -1/T"
 
-        filt = sg.butter(1,
-                         1/T,
-                         output='sos',
-                         fs=1/dt)
-        x_filt = sg.sosfilt(filt, x2)
+        filt = butter(1,
+                      1/T,
+                      output='sos',
+                      fs=1/dt)
+        x_filt = sosfilt(filt, x2)
 
         # Calculate Level array
         L = [10*np.log10(el/((2e-5)**2)*T) for el in x_filt]
@@ -569,10 +574,11 @@ class Signal:
         -------
         direct_sync: (fig: plt.Figure, ax: plt.ax)
         correctet_sig: Signal
-            Corrected Signal without direct sound."""
+            Corrected Signal without direct sound.
+        """
 
         direct, _ = appl_win(direct, t_start, t_dur)
-        corell = sg.correlate(direct.y, self.y)
+        corell = correlate(direct.y, self.y)
 
         corell = np.roll(corell, int(len(corell)/2))
         pos = np.argmax(corell)
@@ -583,6 +589,110 @@ class Signal:
         direct_sync.plot_y_t()
         return direct_sync, Signal(y=self.y - direct_sync.y,
                                    dt=direct_sync.dt)
+
+    def fit(self, xx):
+        """ fit linear function linear() to slice of im_dec
+            Parameters
+            ----------
+            imp_dec : Signal
+                Signal containing one impulse response
+            xx : float
+                Decay in dB over which to aprox. keyvalues
+
+            Returns
+            -------
+            opt : np.array([float: float])
+                m: float
+                    Slope of the aproximated line (should be negative)
+                y0: float
+                    Start value of fitted line (-5 dB)
+            """
+
+        def linear(t, m, y0):
+            """ Linear function for regression fit: y = m*t+y0"""
+            return m*t+y0
+
+        self.level_time()
+
+        # Arraymask to make sure to get peaks after max
+        afterPeakArray = np.ones(self.n_tot, dtype=bool)
+        afterPeakArray[:np.argmax(self.y)] = False
+
+        # Understanding: shold be in samples, comment said [s]
+        # Last pos where a sample is close (+-.01) at L(peak)-5dB
+        el5 = np.where(np.isclose(self.L_t,
+                                  max(self.L_t)-5,
+                                  atol=.01) &
+                       afterPeakArray)[0][-1]
+        # Last pos where a sample is close (+-.01) at L(peak)-5dB-xxdB
+        elxx = np.where(np.isclose(self.y,
+                                   max(self.y)-5-xx,
+                                   atol=.01) &
+                        afterPeakArray)[0][-1]
+
+        # Slice the arrays in which the fit should take place
+        t_act = self.axis_arrays['t'][el5:elxx]
+        y_act = self.y[el5:elxx]
+
+        # Get the optimisation
+        # TODO: adding the R^2 value in return
+        # to tell user if chosen length yields sensible results
+        opt, _ = curve_fit(linear, t_act, y_act)
+
+        return opt
+
+    def txx(self, xx=20):
+        """Calculate decay time.
+
+        Calculate the decay time by 60 dB form interpolation
+        between -5 dB and -5-xx dB.
+        It uses a interpolation with scipy.optimize.curve_fit on a line.
+        This is implemneted in the fit function
+
+        Parameters
+        ----------
+        imp_dec : Signal
+            Signal containing one impulse only
+        xx : float
+            Decay for interpolation
+
+        Returns
+        -------
+        T60 : float
+            Time it would take the signal to decay by 60 dB.
+            (If it had a sufficiently high level relatively to the noisefloor)
+        """
+
+        lin_par = self.fit(xx)
+        return 60/np.abs(lin_par[0])
+
+    def cxx(self, xx: float = 80):
+        """Calculates the ratio between early and late sound energy.
+
+        Calculates the logarithmic ratio between sound energy comming before
+        and after xx ms of a RIR according to DIN-ISO-3382-1:2009
+
+        Calculation (e.g.):
+        C_80 = 10*lg(\\int_0^80(p(t)^2) / \\int_80_\\inv(p(t)^2))
+
+        Parameters
+        ----------
+        imp_dec : Signal
+            Impulse response with only one impulse.
+            Beware: the Impulse must be cut, but should not be cut to short.
+        xx : float
+            Time in ms to draw the line between early and late energy.
+            Typical values are:
+                50 -> Deutlichkeitsmaß D50
+                80 -> Klarheitsmaß C80"""
+        start = np.argmax(self.y)
+        mid = int(xx*1e-3/self.dt) + start
+        end = len(self.y)-1
+
+        # Summing instead of integration is ok, bc its about the relation
+        cxx = 10*np.log10(np.sum(np.pow(self.y[start, mid], 2)) /
+                          np.sum(np.pow(self.y[mid, end], 2)))
+        return cxx
 
 
 def rotate_sig_lst(sig_lst,
@@ -664,9 +774,9 @@ def rotate_sig_lst(sig_lst,
 
         # Get shifter by corelation in determined range
         shifter = (start_cor_2-start_cor_1) + end_cor_2-start_cor_2 - \
-            np.argmax(sg.correlate(sig_lst[0].y[start_cor_1:end_cor_1],
-                                   el.y[start_cor_2:end_cor_2],
-                                   mode='full'))
+            np.argmax(correlate(sig_lst[0].y[start_cor_1:end_cor_1],
+                                el.y[start_cor_2:end_cor_2],
+                                mode='full'))
 
         # shift every signal by 'shifter' values
         # np.roll(sig_lst[i] and [0]) makes sure, that all imp resp. start
@@ -676,7 +786,6 @@ def rotate_sig_lst(sig_lst,
         sig_lst[i].y = np.roll(el.y, -shifter-start_cor_1+fix_shift_int)
         i += 1
     sig_lst[0].y = np.roll(sig_lst[0].y, - start_cor_1+fix_shift_int)
-
     # return sig_lst
 
 

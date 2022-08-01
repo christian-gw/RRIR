@@ -250,5 +250,3 @@ if not plot_3D:
     ax.plot(phi, R_max[0])
 
 plt.show()
-# %%
-
