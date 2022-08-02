@@ -96,7 +96,7 @@ class TransferFunction:
     # Methods
     #     -------
     #     convolute_f() -> Signal
-    #         Returns a convolution of a signal and the tf with length of signal
+    #         Returns a convolution of a signal and tf with length of signal
     #     __get_band() -> float
     #         Returns RMS value within a specified band
     #     get_octave_band() -> TransferFunction
