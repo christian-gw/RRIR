@@ -53,8 +53,8 @@ class TransferFunction:
             Externally calculated tf
             Also needs x
         signal: Signal
-            Signal with incomming and outcomming component. 
-            Also needs in_win and re_win. 
+            Signal with incomming and outcomming component.
+            Also needs in_win and re_win.
             Uses Adrienne Windowing see DIN EN 1793-5
         in_win: touple(float, float)
             Time window for incomming
@@ -107,7 +107,6 @@ class TransferFunction:
     #         Plot Spectrum
     #     plot_oct() -> fig, ax:
     #         Plot time or frequency representation of tf
-
 
     def __init__(self, **kwargs):
         if 'incoming_sig' in kwargs and 'reflected_sig' in kwargs:

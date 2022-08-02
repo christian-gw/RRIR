@@ -100,7 +100,6 @@ class Signal:
 #     plot_spec_transform() -> plt.fig, plt.ax
 #         Plot spectrogram of transformation like in method impulse_response
 
-
     sig_nr = 0
     entity = []
 

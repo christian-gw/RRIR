@@ -14,7 +14,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath("."))
 # import pathlib
-import os
+# import os
 import sys
 
 abspath = "C:\\Users\\gmeinwieserch\\Documents\\Python\\Reflection\\"
@@ -38,7 +38,7 @@ release = '0.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.napoleon',
-]
+             ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
