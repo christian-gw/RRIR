@@ -1,8 +1,13 @@
 # %% codecell
 import unittest as unit
 import numpy as np
-from Ambi import test
-from Ambi import create_rot_matrix
+
+if __name__ == "__main__":
+    from Ambi import test
+    from Ambi import create_rot_matrix
+else:
+    from RRIR.Ambi import test
+    from RRIR.Ambi import create_rot_matrix
 
 
 # Helpers for testing np.array

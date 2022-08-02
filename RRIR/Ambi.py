@@ -19,7 +19,7 @@ from copy import deepcopy
 
 if __name__ == "__main__":
     import Signal as sg
-elif __name__[:3] != 'RRIR':
+elif __name__[:4] != 'RRIR':
     import Signal as sg
 else:
     import RRIR.Signal as sg
@@ -33,13 +33,13 @@ class Mic:
     ----------
     alpha: float
         alpha value of the mic wich specifies directivity
-
-    Methods
-    -------
-    plot_directivity_2d() -> fig, ax
-        Plots directivity plot in 2d
-    plot_directivity_3d() -> fig, ax
-        Plots directivity plot in 3d"""
+    """
+    # Methods
+    # -------
+    # plot_directivity_2d() -> fig, ax
+    #     Plots directivity plot in 2d
+    # plot_directivity_3d() -> fig, ax
+    #     Plots directivity plot in 3d
 
     def __init__(self, alpha):
         self.alpha = alpha
@@ -88,7 +88,9 @@ class AmbiMic:
     r: float
         Radius of 1.O Ambisonics mic
     a: float
-        alpha value which specifies Form"""
+        alpha value which specifies Form
+    """
+
     def __init__(self,
                  R,
                  a,
@@ -172,16 +174,16 @@ class ambiSig:
         List of measurement Signal s according to docstring
     mic_settings: AmbiMic
         AmbiMic object of the used microphone
-
-    Methods
-    -------
-    _rotate_b_format() -> None
-        Rotates the coordinate System of the B-Format
-    get_one_direction() -> Signal
-        Performs a rotation so, that the x-figure 8 of the B-Format
-        points in the specified direction and extracts this x-track.
-    safe_b_format(names) -> None
-        Safes B-Format to specified filename"""
+    """
+    # Methods
+    # -------
+    # _rotate_b_format() -> None
+    #     Rotates the coordinate System of the B-Format
+    # get_one_direction() -> Signal
+    #     Performs a rotation so, that the x-figure 8 of the B-Format
+    #     points in the specified direction and extracts this x-track.
+    # safe_b_format(names) -> None
+    #     Safes B-Format to specified filename
 
     def __init__(self,
                  Signals: list,
@@ -302,13 +304,7 @@ def test(i):
 def create_rot_matrix(phi, theta, rad=True):
     """Creates rotation matrix.
 
-    Usage
-    -----
-        rot_mat = create_rot_matrix(phi, theta, rad=True)
-        vector = np.array([x, y, z])
-        rot_vector = np.dot(rot_mat, vector)
-
-    Parmameters
+    Parameters
     -----------
     phi: float
         Rotation angle angle around Z with X = 0
@@ -319,7 +315,14 @@ def create_rot_matrix(phi, theta, rad=True):
 
     Returns
     -------
-    Rotation Matrix: np.array(3,3)"""
+    Rotation Matrix: np.array(3,3)
+    """
+
+    # Usage
+    # -----
+    #     rot_mat = create_rot_matrix(phi, theta, rad=True)
+    #     vector = np.array([x, y, z])
+    #     rot_vector = np.dot(rot_mat, vector)
 
     if not rad:
         phi, theta = np.radians((phi, theta))

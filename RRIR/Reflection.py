@@ -50,17 +50,17 @@ class Measurement:
        List containing all measurementpoints with signals
     n_mp: int
        Over all number of mps
-
-    Methods
-    -------
-    create_mp(number, _signal, pos) -> None
-        creates a measurement point
-    del_mp(number) -> None
-        deletes a measurement point by number
-    plot_overview() -> fig, ax
-        plots an overview of all measurement points
-        relative to source and probe
-    average() -> None"""
+    """
+    # Methods
+    # -------
+    # create_mp(number, _signal, pos) -> None
+    #     creates a measurement point
+    # del_mp(number) -> None
+    #     deletes a measurement point by number
+    # plot_overview() -> fig, ax
+    #     plots an overview of all measurement points
+    #     relative to source and probe
+    # average() -> None
 
     def __init__(self, name, d_mic, d_probe):
         self.m_name = name
@@ -195,21 +195,21 @@ class MeasurementPoint:
     c_geo: float
         Correction coefficient for sound power distribution
         Set with __c_geo
-
-    Methods
-    -------
-    calc_c_geo(norm) -> if norm: returns traveled sound distance: float
-        Needs gemometry to be set.
-        Calcs the correction factors for geometrical correction.
-        Sets to attribute if not otherwise specified by norm.
-    calc_c_dir() -> 0
-        Currently not implemented bc its assumed,
-        that omnisource has no directivity.
-        Dummy bc Norm specifies correction.
-    apply_c() -> None
-        Applies all calculated corrections to the MPs signal
-    beta_in_deg() -> float
-        Returns reflection angle in degrees"""
+    """
+#   Methods
+#     -------
+#     calc_c_geo(norm) -> if norm: returns traveled sound distance: float
+#         Needs gemometry to be set.
+#         Calcs the correction factors for geometrical correction.
+#         Sets to attribute if not otherwise specified by norm.
+#     calc_c_dir() -> 0
+#         Currently not implemented bc its assumed,
+#         that omnisource has no directivity.
+#         Dummy bc Norm specifies correction.
+#     apply_c() -> None
+#         Applies all calculated corrections to the MPs signal
+#     beta_in_deg() -> float
+#         Returns reflection angle in degrees
 
     def __init__(self, number, distances, transfer_function, pos):
         """Init with good defaults or provided values."""

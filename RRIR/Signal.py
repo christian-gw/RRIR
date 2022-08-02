@@ -63,23 +63,6 @@ class Signal:
             path : string - path to the file
             name : string - name of the file
 
-    Methods
-    -------
-    impulse_response() -> Signal
-        Calc and return impulse response from measured sweep and exitation
-    filter_y() -> Signal
-        filter signal and return filtered signal
-    resample() -> Signal
-        Resample signal and return resampled (no antialiasing)
-    cut_signal() -> Signal
-        Cut signal between specified times and return new signal
-    plot_y_t() -> plt.fig, plt.ax
-        Plot time signal
-    plot_y_f() -> plt.fig, plt.ax
-        Plot frequency signal
-    plot_spec_transform() -> plt.fig, plt.ax
-        Plot spectrogram of transformation like in method impulse_response
-
     Attributes
     ----------
     exitation: Bool
@@ -100,6 +83,23 @@ class Signal:
         xf: np.array
             Frequency axis
 """
+#  Methods
+#     -------
+#     impulse_response() -> Signal
+#         Calc and return impulse response from measured sweep and exitation
+#     filter_y() -> Signal
+#         filter signal and return filtered signal
+#     resample() -> Signal
+#         Resample signal and return resampled (no antialiasing)
+#     cut_signal() -> Signal
+#         Cut signal between specified times and return new signal
+#     plot_y_t() -> plt.fig, plt.ax
+#         Plot time signal
+#     plot_y_f() -> plt.fig, plt.ax
+#         Plot frequency signal
+#     plot_spec_transform() -> plt.fig, plt.ax
+#         Plot spectrogram of transformation like in method impulse_response
+
 
     sig_nr = 0
     entity = []
@@ -683,8 +683,8 @@ class Signal:
         xx : float
             Time in ms to draw the line between early and late energy.
             Typical values are:
-                50 -> Deutlichkeitsmaß D50
-                80 -> Klarheitsmaß C80"""
+            50 -> Deutlichkeitsmaß D50
+            80 -> Klarheitsmaß C80"""
         start = np.argmax(self.y)
         mid = int(xx*1e-3/self.dt) + start
         end = len(self.y)-1
@@ -816,8 +816,8 @@ def appl_win(sig, t_start, t_len, form='norm'):
     """Define and apply a window to a signal.
     Positions are set by t_start, t_len
     Possible forms are:
-        sym = tuckey with \alpha = .03 or
-        Norm = norm window)
+    sym = tuckey with \alpha = .03 or
+    Norm = norm window)
 
     Parameters
     ----------

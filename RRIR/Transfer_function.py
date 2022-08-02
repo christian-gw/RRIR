@@ -53,40 +53,25 @@ class TransferFunction:
             Externally calculated tf
             Also needs x
         signal: Signal
-            Signal with incomming and outcomming component
-            Also needs in_win and re_win
-            Uses Adrienne Windowing see Norm # TODO: Norm
-         in_win: touple(float, float)
+            Signal with incomming and outcomming component. 
+            Also needs in_win and re_win. 
+            Uses Adrienne Windowing see DIN EN 1793-5
+        in_win: touple(float, float)
             Time window for incomming
             Also needs signal and re_win
-            start: float
-                Startvalue in [s]
-            duration: float
-                Duration in [s]
-         re_win: touple(float, float)
+        start: float
+            Startvalue in [s]
+        duration: float
+            Duration in [s]
+        re_win: touple(float, float)
             Time window for incomming
             Also needs signal and in_win
-            start: float
-                Startvalue in [s]
-            duration: float
-                Duration in [s]
+        start: float
+            Startvalue in [s]
+        duration: float
+            Duration in [s]
 
           from two windowed sections of signal (Adrienne windowing - Norm)
-
-        Methods
-        -------
-        convolute_f() -> Signal
-            Returns a convolution of a signal and the tf with length of signal
-        __get_band() -> float
-            Returns RMS value within a specified band
-        get_octave_band() -> TransferFunction
-            Returns tf in octave bands
-        plot_ht() -> fig, ax
-            Plot Time signal
-        plot_hf() -> fig, ax
-            Plot Spectrum
-        plot_oct() -> fig, ax:
-            Plot time or frequency representation of tf
 
         Attributes
         ----------
@@ -106,7 +91,23 @@ class TransferFunction:
             t: np.array
                 Time axis
             xf: np.array
-                Frequency axis"""
+                Frequency axis
+        """
+    # Methods
+    #     -------
+    #     convolute_f() -> Signal
+    #         Returns a convolution of a signal and the tf with length of signal
+    #     __get_band() -> float
+    #         Returns RMS value within a specified band
+    #     get_octave_band() -> TransferFunction
+    #         Returns tf in octave bands
+    #     plot_ht() -> fig, ax
+    #         Plot Time signal
+    #     plot_hf() -> fig, ax
+    #         Plot Spectrum
+    #     plot_oct() -> fig, ax:
+    #         Plot time or frequency representation of tf
+
 
     def __init__(self, **kwargs):
         if 'incoming_sig' in kwargs and 'reflected_sig' in kwargs:
