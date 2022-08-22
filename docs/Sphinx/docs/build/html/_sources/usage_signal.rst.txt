@@ -1,5 +1,5 @@
-Example use cases
-=================
+Example use cases of the Signal Class
+=====================================
 
 Installation
 ------------
@@ -7,7 +7,7 @@ Installation
 To use RIRR, first install it and its dependencies using pip or conda:
 
 .. code-block:: console
-   
+
    $ pip liborsa # Not in conda
    $ pip install ./path/to/RIRR/folder
    $ # Alternative

@@ -12,7 +12,7 @@ Some common usecases are documented in :doc: `usage`.
 
 .. toctree::
 
-   usage
+   usage_signal
    modules
 
 .. note::
