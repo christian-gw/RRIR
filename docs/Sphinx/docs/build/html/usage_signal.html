@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Example use cases &#8212; RRIR 0.1 documentation</title>
+    <title>Example use cases of the Signal Class &#8212; RRIR 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -16,7 +16,7 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="RRIR" href="modules.html" />
+    <link rel="next" title="Example use cases of the TransferFunction Class" href="usage_TransferFunction.html" />
     <link rel="prev" title="Welcome to RIRR’s documentation!" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -34,8 +34,8 @@
 
           <div class="body" role="main">
             
-  <section id="example-use-cases">
-<h1>Example use cases<a class="headerlink" href="#example-use-cases" title="Permalink to this heading">¶</a></h1>
+  <section id="example-use-cases-of-the-signal-class">
+<h1>Example use cases of the Signal Class<a class="headerlink" href="#example-use-cases-of-the-signal-class" title="Permalink to this heading">¶</a></h1>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h2>
 <p>To use RIRR, first install it and its dependencies using pip or conda:</p>
@@ -115,6 +115,14 @@ Further assuming you plotted it like in ‘Plot Impulse Response’ and learned 
 </pre></div>
 </div>
 </section>
+<section id="time-based-key-values">
+<h2>Time based Key Values<a class="headerlink" href="#time-based-key-values" title="Permalink to this heading">¶</a></h2>
+<p>Calculation of the t20 and c50 values on the averaged impulse response from last section.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;T20: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">imp_avg_down</span><span class="o">.</span><span class="n">txx</span><span class="p">(</span><span class="n">xx</span><span class="o">=</span><span class="mi">20</span><span class="p">)))</span>
+<span class="linenos">2</span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;C50: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">imp_avg_down</span><span class="o">.</span><span class="n">cxx</span><span class="p">(</span><span class="n">xx</span><span class="o">=</span><span class="mi">50</span><span class="p">)))</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -135,13 +143,16 @@ Further assuming you plotted it like in ‘Plot Impulse Response’ and learned 
 
 <h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Example use cases</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example use cases of the Signal Class</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creation-of-impulse-responses-from-sweeps">Creation of Impulse Responses from Sweeps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plot-impulse-response">Plot Impulse Response</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cut-and-or-average-multiple-impulses">Cut and/or average multiple impulses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#time-based-key-values">Time based Key Values</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="usage_TransferFunction.html">Example use cases of the TransferFunction Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage_Reflection.html">Example use cases of the Measurement and MeasurementPoint Classes in the Reflection module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">RRIR</a></li>
 </ul>
 
@@ -150,7 +161,7 @@ Further assuming you plotted it like in ‘Plot Impulse Response’ and learned 
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="index.html" title="previous chapter">Welcome to RIRR’s documentation!</a></li>
-      <li>Next: <a href="modules.html" title="next chapter">RRIR</a></li>
+      <li>Next: <a href="usage_TransferFunction.html" title="next chapter">Example use cases of the TransferFunction Class</a></li>
   </ul></li>
 </ul>
 </div>
@@ -184,7 +195,7 @@ Further assuming you plotted it like in ‘Plot Impulse Response’ and learned 
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
-      <a href="_sources/usage.rst.txt"
+      <a href="_sources/usage_Signal.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

@@ -1,5 +1,5 @@
-Example use cases
-=================
+Example use cases of the Signal Class
+=====================================
 
 Installation
 ------------
@@ -7,7 +7,7 @@ Installation
 To use RIRR, first install it and its dependencies using pip or conda:
 
 .. code-block:: console
-   
+
    $ pip liborsa # Not in conda
    $ pip install ./path/to/RIRR/folder
    $ # Alternative
@@ -92,3 +92,13 @@ Further assuming you plotted it like in 'Plot Impulse Response' and learned wher
    # Perform downsamping
    imp_avg_down = imp_avg.resample(in_Sample)
 
+Time based Key Values
+---------------------
+
+Calculation of the t20 and c50 values on the averaged impulse response from last section.
+
+.. code-block:: Python
+   :linenos:
+
+   print('T20: ' + str(imp_avg_down.txx(xx=20)))
+   print('C50: ' + str(imp_avg_down.cxx(xx=50)))

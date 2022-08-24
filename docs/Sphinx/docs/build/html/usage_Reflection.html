@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Example use cases of the Measurement and MeasurementPoint Classes in the Reflection module &#8212; RRIR 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="RRIR" href="modules.html" />
+    <link rel="prev" title="Example use cases of the TransferFunction Class" href="usage_TransferFunction.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="example-use-cases-of-the-measurement-and-measurementpoint-classes-in-the-reflection-module">
+<h1>Example use cases of the Measurement and MeasurementPoint Classes in the Reflection module<a class="headerlink" href="#example-use-cases-of-the-measurement-and-measurementpoint-classes-in-the-reflection-module" title="Permalink to this heading">¶</a></h1>
+<p>Both of the classes of the reflection module serve the purpose of analysing Reflection measurements.
+Basis is the norm DIN EN 1793.</p>
+<section id="definition-of-measurement-with-multiple-points-correction-averaging">
+<h2>Definition of Measurement with multiple points + Correction + Averaging<a class="headerlink" href="#definition-of-measurement-with-multiple-points-correction-averaging" title="Permalink to this heading">¶</a></h2>
+<p>You have two signals loaded from wav files representing <strong>impulses</strong> of a reflection measurement.
+You also have one Signal aquired with lots of space around.
+So the earliest reflections arive much later than in the former two measurements.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1"># Import</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">RIRR</span> <span class="kn">import</span> <span class="n">Signal</span>
+<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">RIRR</span> <span class="kn">import</span> <span class="n">TransferFunction</span>
+<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">RIRR</span> <span class="kn">import</span> <span class="n">Measurement</span><span class="p">,</span> <span class="n">MeasurementPoint</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="c1"># Define inforamtion for measurements</span>
+<span class="linenos"> 7</span><span class="c1">#      Key        [path,  in_win, re_win]</span>
+<span class="linenos"> 8</span><span class="n">NR</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Wand_0_0&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;...&#39;</span><span class="p">,</span> <span class="mf">0.1234</span><span class="p">,</span> <span class="mf">0.1245</span><span class="p">],</span>
+<span class="linenos"> 9</span>      <span class="s1">&#39;Wand_+_0&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;...&#39;</span><span class="p">,</span> <span class="mf">0.1234</span><span class="p">,</span> <span class="mf">0.1245</span><span class="p">]}</span>
+<span class="linenos">10</span><span class="c1">#       Key          x,   y</span>
+<span class="linenos">11</span><span class="n">POS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Wand_0_0&#39;</span><span class="p">:</span>  <span class="p">[</span><span class="mi">0</span><span class="p">,</span>   <span class="mi">0</span><span class="p">],</span>
+<span class="linenos">12</span>       <span class="s1">&#39;Wand_+_0&#39;</span><span class="p">:</span>  <span class="p">[</span><span class="mf">.4</span><span class="p">,</span>   <span class="mi">0</span><span class="p">]}</span>
+<span class="linenos">13</span>
+<span class="linenos">14</span><span class="c1"># Load the Data with the dict keys as filenames</span>
+<span class="linenos">15</span><span class="n">NAME</span> <span class="o">=</span> <span class="s1">&#39;IMP_</span><span class="si">%s</span><span class="s1">.wav&#39;</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span><span class="c1"># Set up Mesurement object with distances Source --- Mic --- Wall</span>
+<span class="linenos">18</span><span class="n">mea_Marth</span> <span class="o">=</span> <span class="n">Measurement</span><span class="p">(</span><span class="s1">&#39;Measurement_Martha_Kirche&#39;</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">.25</span><span class="p">)</span>
+<span class="linenos">19</span>
+<span class="linenos">20</span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">position</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">NR</span><span class="p">)),</span> <span class="n">NR</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+<span class="linenos">21</span>   <span class="c1"># Load impulse Files</span>
+<span class="linenos">22</span>   <span class="n">NR</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Signal</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">AVG_DIR</span><span class="p">,</span>
+<span class="linenos">23</span>                              <span class="n">name</span><span class="o">=</span><span class="n">NAME</span> <span class="o">%</span><span class="p">(</span><span class="n">position</span><span class="p">)))</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span>   <span class="c1"># Create TF using Adrienne windowing</span>
+<span class="linenos">26</span>   <span class="n">arr</span> <span class="o">=</span> <span class="n">NR</span><span class="p">[</span><span class="n">position</span><span class="p">]</span>
+<span class="linenos">27</span>   <span class="n">NR</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TransferFuction</span><span class="p">(</span><span class="n">signal</span><span class="o">=</span><span class="n">arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+<span class="linenos">28</span>                                       <span class="n">in_win</span><span class="o">=</span><span class="n">arr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+<span class="linenos">29</span>                                       <span class="n">re_win</span><span class="o">=</span><span class="n">arr</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span>   <span class="c1"># Add Measurement Points to Measurement</span>
+<span class="linenos">32</span>   <span class="n">mea_Marth</span><span class="o">.</span><span class="n">create_mp</span><span class="p">(</span><span class="n">i</span><span class="p">,</span>
+<span class="linenos">33</span>                       <span class="n">NR</span><span class="p">[</span><span class="n">position</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">get_octave_band</span><span class="p">(</span><span class="n">fact</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="linenos">34</span>                       <span class="n">POS</span><span class="p">[</span><span class="n">position</span><span class="p">])</span>
+<span class="linenos">35</span>
+<span class="linenos">36</span>   <span class="n">mea_Marth</span><span class="o">.</span><span class="n">mp_lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">apply_c</span><span class="p">()</span>
+<span class="linenos">37</span>
+<span class="linenos">38</span><span class="c1"># Average and plot</span>
+<span class="linenos">39</span><span class="n">mea_Marth</span><span class="o">.</span><span class="n">average_mp</span><span class="p">()</span>
+<span class="linenos">40</span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">mea_Marth</span><span class="o">.</span><span class="n">average</span><span class="o">.</span><span class="n">plot_hf</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">RRIR</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage_Signal.html">Example use cases of the Signal Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage_TransferFunction.html">Example use cases of the TransferFunction Class</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example use cases of the Measurement and MeasurementPoint Classes in the Reflection module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#definition-of-measurement-with-multiple-points-correction-averaging">Definition of Measurement with multiple points + Correction + Averaging</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">RRIR</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="usage_TransferFunction.html" title="previous chapter">Example use cases of the TransferFunction Class</a></li>
+      <li>Next: <a href="modules.html" title="next chapter">RRIR</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, gmeinwieserc.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/usage_Reflection.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

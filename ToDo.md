@@ -5,18 +5,22 @@
   - [x] RRIR reflektion_room_impulse_response Toolbox
 - [ ] Documentation  
   - [x] Function docstrings --> np format
-  - [ ] Sphinx Setup
-  - [ ] Creation of Doku
+  - [x] Sphinx Setup
+  - [x] Creation of Docu
+  - [ ] Deployment of Docu
 - [ ] Functionality
   - [x] Overhaul Ambi.get_one_direction
   - [x] Test Ambi.get_one_direction
   - [ ] Add Hedgehog like visu
   - [x] Add Decay measuremnt from Deconvolution Project
+  - [ ] Add Apply correction for all MP to Measurement class
+- [ ] Refactor
+  - [ ] Use import pathlib everywhere
 - [ ] Shipping
   - [x] One Folder
     - [x] One Folder for Package --> Ship
     - [x] One Folder for Examples
-  - [ ] Shipable
+  - [x] Shipable
   - [x] Requirements
   - [x] Setup.py --> Decision: No!
 - [ ] Visu
