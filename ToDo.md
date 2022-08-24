@@ -13,6 +13,9 @@
   - [x] Test Ambi.get_one_direction
   - [ ] Add Hedgehog like visu
   - [x] Add Decay measuremnt from Deconvolution Project
+  - [ ] Add Apply correction for all MP to Measurement class
+- [ ] Refactor
+  - [ ] Use import pathlib everywhere
 - [ ] Shipping
   - [x] One Folder
     - [x] One Folder for Package --> Ship
