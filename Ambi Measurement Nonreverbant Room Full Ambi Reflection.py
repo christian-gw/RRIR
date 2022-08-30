@@ -18,13 +18,13 @@
 from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
-# from IPython import get_ipython
+from IPython import get_ipython
 import RRIR.Signal as sg
 import RRIR.Transfer_function as tf
 import RRIR.Ambi as ambi
 # Signal  # , rotate_sig_lst()
 
-# get_ipython().run_line_magic('matplotlib', 'qt')
+get_ipython().run_line_magic('matplotlib', 'qt')
 # get_ipython().run_line_magic('matplotlib', 'inline')
 
 PLOT = False
@@ -36,7 +36,7 @@ fs = 48e3
 T = 10
 
 Tp = 5
-n_sweep = 3
+n_sweep = 1
 cut_start = 2
 # path = """C:/Users/gmeinwieserch/Desktop/20220629_Messung Schallmessraum/\
 # Reflektion Boden/"""
@@ -98,15 +98,15 @@ print('Calculating Ambisonics Signal.')
 am = ambi.AmbiMic(1.47, .5)
 
 # Generate Signal
-aSig = ambi.ambiSig(h_tot, am)
-# print(aSig.b_format)
+bform_sig = ambi.ambiSig(h_tot, am)
+# print(bform_sig.b_format)
 
 # Plot and Format
 if PLOT:
     print('Plotting calculated Signals')
 
     fig, ax = plt.subplots()
-    for el in zip(['w', 'x', 'y', 'z'], aSig.b_format):
+    for el in zip(['w', 'x', 'y', 'z'], bform_sig.b_format):
         ax.plot(el[1].axis_arrays['t'],
                 np.real(el[1].y),
                 label=el[0], lw=.25)
@@ -117,13 +117,13 @@ if PLOT:
 
 # %% Calculate Transferfunctions of A-Format
 # 5. Calculate Transferfunction using Adrienne Windowing
-if False:
+if True:
     tf_tot = []
     output_label = ['w', 'x', 'y', 'z']
     for el in zip(output_label, h_tot):
         tf_avg = []
         print('Signal ' + el[0] + ':')
-        for i in range(3):
+        for i in range(n_sweep):
             # Calculate TF of single impulses within signal 7.6565 - 8.4085
             # Time ranges for impulses:
             # Boden: 7.6565 s; Element 8.4085 s; Duration 0.0025 s
@@ -151,26 +151,28 @@ if False:
 if True:
     print('Exporting Direct, Reflected and Perpendicular Signals.')
     # DEBUG ONLY ############
-    aSig = ambi.ambiSig(h_tot, am)
+    bform_sig = ambi.ambiSig(h_tot, am)
     # #######################
     # phi = 0 --> X
     # theta = 0 --> Z
-    direct_sig = aSig.get_one_direction(20, 90, rad=False)
-    perp1_sig = aSig.get_one_direction(110, 0, rad=False)
-    perp2_sig = aSig.get_one_direction(20, 90, rad=False)
-    ref_sig = aSig.get_one_direction(20, 105, rad=False)
+    direct_sig = bform_sig.get_one_direction(20, 90, rad=False)
+    perp1_sig = bform_sig.get_one_direction(110, 0, rad=False)
+    perp2_sig = bform_sig.get_one_direction(20, 90, rad=False)
+    ref_sig = bform_sig.get_one_direction(20, 105, rad=False)
 
     tar_file_names = ['Direct', 'Perp1', 'Perp2', 'Reflection']
 
     if True:
+        # Differentiation between Signals bad bc of borad 8 Charakteristics
+        # Try different Measurement setup (greater angle between dir and ref)
         print('Plotting calculated Signals')
         fig, ax = plt.subplots()
 
-        for el in zip(range(4), [direct_sig, perp1_sig, perp2_sig, ref_sig]):
-            ax.plot(el[1].axis_arrays['t'],
-                    el[1].y,
+        for nr, el in enumerate([direct_sig, perp1_sig, perp2_sig, ref_sig]):
+            ax.plot(el.axis_arrays['t'],
+                    el.y,
                     lw=1,
-                    label=tar_file_names[el[0]])
+                    label=tar_file_names[nr])
         ax.set_xlim(8.405, 8.425)
         ax.set_xlabel('t [s]')
         ax.legend()
@@ -180,16 +182,16 @@ if True:
                                                 perp2_sig.y,
                                                 ref_sig.y)))))
 
-    for el in zip(range(4), [direct_sig, perp1_sig, perp2_sig, ref_sig]):
-        el[1]*norm_fak
-        el[1].write_wav(tar_file_names[el[0]] + '.wav', norm=False)
+    for nr, el in enumerate([direct_sig, perp1_sig, perp2_sig, ref_sig]):
+        el*norm_fak     # ! operator overload on Signal Class
+        el.write_wav(tar_file_names[nr] + '.wav', norm=False)
 
 # %%
 # 7. Plot spherical max and delay
 
 # DEBUG ONLY ############
-# aSig = ambi.ambiSig(h_tot, am)
-# aSig._rotate_b_format(ambi.create_rot_matrix(90, 0, rad=False))
+# bform_sig = ambi.ambiSig(h_tot, am)
+# bform_sig._rotate_b_format(ambi.create_rot_matrix(90, 0, rad=False))
 # #######################
 
 
@@ -224,7 +226,7 @@ if plot_3D:
     theta = np.linspace(0, 2*np.pi, 32)
     P, T = np.meshgrid(phi, theta)
 
-    R_max, R_argmax = calc_R(phi, theta, aSig)
+    R_max, R_argmax = calc_R(phi, theta, bform_sig)
 
     X = (R_max)*np.sin(T)*np.cos(P)
     Y = (R_max)*np.sin(T)*np.sin(P)
@@ -243,10 +245,12 @@ if not plot_3D:
     # theta = np.linspace(0, 2*np.pi, 32)
     theta = np.array([0])
 
-    R_max, R_argmax = calc_R(phi, theta, aSig)
+    R_max, R_argmax = calc_R(phi, theta, bform_sig)
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
 
     # ax.plot(theta, np.transpose(R_max)[0])
     ax.plot(phi, R_max[0])
 
 plt.show()
+
+# %%

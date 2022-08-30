@@ -14,7 +14,7 @@
 # %%codecell
 import numpy as np
 from scipy import signal
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from copy import deepcopy
 
 if __name__ == "__main__":
@@ -26,62 +26,14 @@ else:
 
 
 # %%codecell
-class Mic:
-    """Class to learn about Mic-patterns
-
-    Parameters
-    ----------
-    alpha: float
-        alpha value of the mic wich specifies directivity
-    """
-    # Methods
-    # -------
-    # plot_directivity_2d() -> fig, ax
-    #     Plots directivity plot in 2d
-    # plot_directivity_3d() -> fig, ax
-    #     Plots directivity plot in 3d
-
-    def __init__(self, alpha):
-        self.alpha = alpha
-
-    def __basic_pattern_2d(self, phi):
-        """Calculates the gain value at angle phi of Mic of given pattern."""
-        return self.alpha + (1 - self.alpha) * np.cos(phi)
-
-    def __basic_pattern_3d(self, phi, theta):
-        """Calculates the gain value at angle phi of Mic of given pattern."""
-        return self.alpha + (1-self.alpha)*np.sin(theta)*np.cos(phi)
-
-    def plot_directivity_2d(self):
-        """Plots directivity using self.__basic_pattern_2d."""
-        abszissa = np.linspace(0, 2*np.pi, 360)
-
-        plt.polar(abszissa,
-                  abs(self.__basic_pattern_2d(abszissa)))
-
-    def plot_directivity_3d(self):
-        """Plots directivity using self.__basic_pattern_2d."""
-
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-
-        phi = np.linspace(0, 2*np.pi, 360)
-        theta = np.linspace(0, 2*np.pi, 360)
-
-        P, T = np.meshgrid(phi, theta)
-        R = abs(self.__basic_pattern_3d(P, T))
-        X = R*np.sin(T)*np.cos(P)
-        Y = R*np.sin(T)*np.sin(P)
-        Z = R*np.cos(T)
-
-        ax.plot_surface(X, Y, Z)
-
 
 class AmbiMic:
     """Class to hold information about the Ambisonics-Mic.
 
     Calculates the Ambisonics mic parameters and correction factors.
-    The correctioni is calculatet according to Gerzon # TODO: Source
+    The correctioni is calculatet according to Gerzon
+    # 1975_Gerzon_The Design of Precisely Coincident Microphone
+    #     Arrays for Stereo and Surround Sound
 
     Parameters
     ----------
@@ -204,7 +156,7 @@ class ambiSig:
         lfu, rfd, lbd, rbu = [s.y for s in self.a_format]
 
         # Assuming perfect coincidence
-        # Truer for small frequencies (d_mic=2 cm ~> 4 kHz max)
+        # True-er for small frequencies (d_mic=2 cm ~> 4 kHz max)
         # Result from the Y^m_{l,n} -> Y Matrix
         # (m - direction Spherical Harmonics, l - MicNr., n - Order)
         # [SchulzeForster_2018] 2.1.2
@@ -229,13 +181,17 @@ class ambiSig:
 
     def _rotate_b_format(self,
                          rot_mat: np.array = np.eye(3)):
-        """Rotate the B-Format to a new coordinate system
+        """Rotate the B-Format to a new coordinate system.
+
+        Source:
+        2014 Kronlacher Zotter Spatial_transformation_enhancement
+        _ambisonics_recordings
 
         Parameters
         ----------
         rot_mat: np.array(3,3)
             Rotation Matrix to rotate the B-format by."""
-# TODO Faulty
+# TODO Faulty # Why?
 
         self.b_rot = np.dot(rot_mat, self.b_format[1:])
 
