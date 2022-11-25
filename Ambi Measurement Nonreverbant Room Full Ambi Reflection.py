@@ -18,13 +18,13 @@
 from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
-from IPython import get_ipython
+# from IPython import get_ipython
 import RRIR.Signal as sg
 import RRIR.Transfer_function as tf
 import RRIR.Ambi as ambi
 # Signal  # , rotate_sig_lst()
 
-get_ipython().run_line_magic('matplotlib', 'qt')
+# get_ipython().run_line_magic('matplotlib', 'qt')
 # get_ipython().run_line_magic('matplotlib', 'inline')
 
 PLOT = False
@@ -45,7 +45,7 @@ cut_start = 2
 #          3: """ZOOM0005_Tr3.WAV""",
 #          4: """ZOOM0005_Tr4.WAV"""}
 
-path = """C:/Users/gmeinwieserch/Desktop/20220629_Messung Schallmessraum/\
+path = """./20220629_Messung Schallmessraum/\
 Reflektion Element/"""
 files = {1: """ZOOM0006_Tr1.WAV""",
          2: """ZOOM0006_Tr2.WAV""",
@@ -220,7 +220,7 @@ def calc_R(phi, theta, sig):
 plot_3D = True
 
 if plot_3D:
-    print('Calculating and plotting for 3D Directivity.')
+    print('Calculating and plotting for 3D Directivity. (Takes some Time)')
 
     phi = np.linspace(0, 2*np.pi, 32)
     theta = np.linspace(0, 2*np.pi, 32)

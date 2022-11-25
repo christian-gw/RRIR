@@ -12,6 +12,7 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 import RRIR.Signal as sg
+from os import getcwd
 # Signal  # , rotate_sig_lst()
 
 # Sweep Parameters
@@ -23,7 +24,7 @@ T = 10
 Tp = 5
 n_sweep = 2
 cut_start = 7.5
-path = """C:/Users/gmeinwieserch/Desktop/20220420_Messung im Gang/"""
+path = getcwd() + "/20220420_Messung im Gang/"
 files = {1: """Gang_1.WAV""",
          2: """Gang_2.WAV""",
          3: """Gang_3.WAV""",
