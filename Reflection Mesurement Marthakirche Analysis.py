@@ -34,8 +34,8 @@
 # 1. Import, Base Settings (System) and Base Settings (User)
 # from reflection_definitions import Signal, TransferFunction, Measurement
 from RRIR.Signal import Signal
-from RRIR.Signal import TransferFunction
-from RRIR.Signal import Measurement
+from RRIR.Transfer_function import TransferFunction
+from RRIR.Reflection import Measurement
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -50,8 +50,8 @@ F_up = 500e3
 # ######## Please specify where the Files are ##############
 ############################################################
 
-AVG_DIR = """C:/Users/gmeinwieserch/Documents/Python/Reflection/
-Work_Dir_Reflection/20220210_0957_avg/"""
+AVG_DIR = "C:/Users/gmeinwieserch/Documents/Python/Reflection/" + \
+    "Work_Dir_Reflection/20220210_0957_avg/"
 NAME = 'IMP_%s.wav'
 
 NR = {'Wand_0_0': ['Wall - LR = 0 m, H = 0 m, NeutrH = 1.6 m'],

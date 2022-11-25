@@ -5,6 +5,7 @@ Learning_Scripts/
 *.mm
 *.png
 *.svg
+*.pyc
 Reflection_old/
 Imp_short/
 RRIR/__pycache__/

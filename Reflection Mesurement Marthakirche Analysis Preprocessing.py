@@ -33,8 +33,8 @@ F_up = 500e3
 # ######## Please specify where the Files are ##############
 ############################################################
 
-TARGET_DIR = """C:/Users/gmeinwieserch/Documents/Python/
-Reflection/Work_Dir_Reflection/"""
+TARGET_DIR = "C:/Users/gmeinwieserch/Documents/Python/" + \
+    "Reflection/Work_Dir_Reflection/"
 
 
 NAME = 'REC0%s.wav'
@@ -65,6 +65,8 @@ mkdir(IMP_DIR)
 signal = Signal(path=SRC_DIR, name=NAME % (NR['Wand_0_0'][0]))
 u_sig = Signal(par_sweep=par_sweep, dt=signal.dt)
 
+print('Create and Save Impulse Responses from Sweeps')
+
 # Process all sigs
 for position in NR.keys():
     # Load sig
@@ -76,7 +78,7 @@ for position in NR.keys():
     del signal.axis_arrays['xf'], signal
 
     # Save Impulse
-    impulse.plot_y_t()
+    impulse.plot_y_t(headline='Impulse Rail.')
     plt.show()
     impulse.write_wav(name=IMP_DIR + '/IMP_' + NAME % (NR[position][0]))
     del impulse.y, impulse.y_f, impulse.axis_arrays['t']
@@ -112,6 +114,7 @@ NAME = 'IMP_REC0%s.wav'
 AVG_DIR = path.join(TARGET_DIR, now + '_avg')
 mkdir(AVG_DIR)
 ################################################################
+print('Average and Save the impulses.')
 
 for position in NR.keys():
     # position = 'Wand_0_0'#for position in NR.keys():
@@ -132,6 +135,7 @@ for position in NR.keys():
                                        force_n=end_cut) for sig in cut_up])
 
     imp_avg_down = imp_avg.resample(in_Sample)
+    imp_avg_down.plot_y_t(headline='Averaged Impulse of one position.')
     imp_avg_down.write_wav(name=AVG_DIR + '/IMP_' + position + '.wav',
                            F_samp=in_Sample)
 
