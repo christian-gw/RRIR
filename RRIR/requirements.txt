@@ -1,5 +1,7 @@
-numpy
-scipy
-matplotlib
-librosa
-datetime
+# pip install -r requirements.txt
+# maybe delete older versions before
+# 
+numpy==1.23.5
+scipy==1.9.3
+soundfile==0.11.0
+librosa==0.9.2
